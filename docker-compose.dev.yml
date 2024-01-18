@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:7.0
+    restart: unless-stopped
+    container_name: y-chat-mongo
+    env_file:
+      - ./.env.dev
+    ports:
+      - $MONGODB_PORT:27017
+    expose:
+      - $MONGODB_PORT
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=$MONGODB_USER
+      - MONGO_INITDB_ROOT_PASSWORD=$MONGODB_PASSWORD
+      - MONGO_INITDB_DATABASE=$MONGODB_DBNAME
+    volumes:
+      - $MONGODB_VOLUME_PATH:/data/db
+    networks:
+      - y-chat-network
+
+networks:
+  y-chat-network:
+    driver: bridge
+    

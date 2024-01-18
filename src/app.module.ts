@@ -7,11 +7,11 @@ import validationSchema from './configs/env.validation';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      cache: true,
-      isGlobal: true,
       envFilePath: process.env.NODE_ENV === 'development' ? '.env.dev' : '.env',
-      expandVariables: true,
+      isGlobal: true,
       validationSchema: validationSchema,
+      cache: true,
+      expandVariables: true,
     }),
   ],
   controllers: [AppController],
