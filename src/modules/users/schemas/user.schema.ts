@@ -4,14 +4,14 @@ import { BaseSchemaSoftDelete } from 'src/common/base.schema';
 import * as bcrypt from 'bcrypt';
 
 export enum EGender {
-  MALE = 'Male',
-  FEMALE = 'Female',
-  OTHER = 'Other',
+  MALE = 1,
+  FEMALE = 2,
+  OTHER = 3,
 }
 
 export enum EStatus {
-  INACTIVATE = 'Inactivate',
-  ACTIVATED = 'Activated',
+  INACTIVATE = 1,
+  ACTIVATED = 2,
 }
 
 @Schema({
@@ -56,17 +56,17 @@ export class User extends BaseSchemaSoftDelete {
   avatar: string;
 
   @Prop()
-  date_of_birth: Date;
+  DOB: Date;
 
   @Prop({
-    type: String,
+    type: Number,
     enum: EGender,
   })
   gender: EGender;
 
   @Prop({
     required: true,
-    type: String,
+    type: Number,
     enum: EStatus,
     default: EStatus.INACTIVATE,
   })

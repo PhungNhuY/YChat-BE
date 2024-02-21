@@ -16,6 +16,23 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "forceConsistentCasingInFileNames": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@common/*": [
+        "src/common/*"
+      ],
+      "@configs/*": [
+        "src/configs/*"
+      ],
+      "@constants/*": [
+        "src/constants/*"
+      ],
+      "@filters/*": [
+        "src/filters/*"
+      ],
+      "@modules/*": [
+        "src/modules/*"
+      ],
+    }
   }
 }
