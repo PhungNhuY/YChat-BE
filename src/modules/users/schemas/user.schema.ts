@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { NextFunction } from 'express';
-import { BaseSchemaSoftDelete } from 'src/common/base.schema';
 import * as bcrypt from 'bcrypt';
+import { BaseSchemaSoftDelete } from '@common/base/base.schema';
 
 export enum EGender {
   MALE = 1,

@@ -1,10 +1,10 @@
-import { buildErrorResponse } from '@common/api-response';
 import {
   ArgumentsHost,
   Catch,
   ExceptionFilter,
   HttpException,
 } from '@nestjs/common';
+import { buildErrorResponse } from '@utils/api-response-builder';
 import { Response } from 'express';
 
 @Catch()
