@@ -1,4 +1,33 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { User } from './schemas/user.schema';
+import { FilterQuery, Model } from 'mongoose';
+import { RegisterDto } from '@modules/auth/dtos/register.dto';
 
 @Injectable()
-export class UsersService {}
+export class UsersService {
+  constructor(
+    @InjectModel(User.name) private readonly userModel: Model<User>,
+  ) {}
+
+  async create(createUserData: RegisterDto): Promise<User> {
+    await this.validate(createUserData, null);
+    return await this.userModel.create(createUserData);
+  }
+
+  private async validate(data: Partial<RegisterDto>, userId: string | null) {
+    const uniqueFields: FilterQuery<User>[] = [];
+    data.email && uniqueFields.push({ email: data.email });
+
+    const matchObject: FilterQuery<User> = {
+      deletedAt: null,
+      _id: { $ne: userId },
+      $or: [...uniqueFields],
+    };
+
+    const existedUser = await this.userModel.findOne(matchObject).lean();
+    if (existedUser) {
+      throw new BadRequestException('Email has been duplicated');
+    }
+  }
+}

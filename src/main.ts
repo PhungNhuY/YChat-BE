@@ -17,6 +17,6 @@ async function bootstrap() {
   // global exception filter
   app.useGlobalFilters(new GlobalExceptionFilter());
 
-  await app.listen(process.env.port);
+  await app.listen(process.env.PORT);
 }
 bootstrap();
