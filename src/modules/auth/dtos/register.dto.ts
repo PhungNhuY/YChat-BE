@@ -1,3 +1,4 @@
+import { EUserGender } from '@constants/user.constant';
 import {
   IsDateString,
   IsEmail,
@@ -7,7 +8,6 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { EGender } from 'src/modules/users/schemas/user.schema';
 
 export class RegisterDto {
   @MaxLength(64)
@@ -30,7 +30,7 @@ export class RegisterDto {
   @IsOptional()
   DOB: Date;
 
-  @IsEnum(EGender)
+  @IsEnum(EUserGender)
   @IsOptional()
-  gender: EGender;
+  gender: EUserGender;
 }

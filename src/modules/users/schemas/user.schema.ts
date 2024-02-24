@@ -1,18 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { NextFunction } from 'express';
 import * as bcrypt from 'bcrypt';
-import { BaseSchemaSoftDelete } from '@common/base/base.schema';
-
-export enum EGender {
-  MALE = 1,
-  FEMALE = 2,
-  OTHER = 3,
-}
-
-export enum EStatus {
-  INACTIVATE = 1,
-  ACTIVATED = 2,
-}
+import { BaseSchemaSoftDelete } from '@common/base.schema';
+import { EUserGender, EUserStatus } from '@constants/user.constant';
 
 @Schema({
   timestamps: true,
@@ -60,17 +50,17 @@ export class User extends BaseSchemaSoftDelete {
 
   @Prop({
     type: Number,
-    enum: EGender,
+    enum: EUserGender,
   })
-  gender: EGender;
+  gender: EUserGender;
 
   @Prop({
     required: true,
     type: Number,
-    enum: EStatus,
-    default: EStatus.INACTIVATE,
+    enum: EUserStatus,
+    default: EUserStatus.INACTIVATE,
   })
-  status: EStatus;
+  status: EUserStatus;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

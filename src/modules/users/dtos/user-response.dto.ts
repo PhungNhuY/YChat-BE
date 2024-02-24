@@ -1,4 +1,4 @@
-import { BaseResponseDto } from '@common/base/base-response.dto';
+import { BaseResponseDto } from '@common/base-response.dto';
 import { Exclude, Expose } from 'class-transformer';
 
 export class UserResponseDto extends BaseResponseDto {

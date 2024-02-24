@@ -1,5 +1,13 @@
-import { ApiResponse, MultiItemsResponse } from '@common/common.type';
 import { plainToInstance } from 'class-transformer';
+
+export type MultiItemsResponse<T> = { items: T[]; total: number };
+
+export type ApiResponse<T> = {
+  success?: boolean;
+  data?: T | MultiItemsResponse<T>;
+  message?: string;
+  error?: any[];
+};
 
 export function transformObjectToResponse<T>(data: object, dto: any): T {
   return plainToInstance(dto, data, {
