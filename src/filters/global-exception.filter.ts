@@ -4,7 +4,7 @@ import {
   ExceptionFilter,
   HttpException,
 } from '@nestjs/common';
-import { buildErrorResponse } from '@utils/api-response-builder';
+import { buildErrorResponse } from '@utils/api-response-builder.util';
 import { Response } from 'express';
 
 @Catch()

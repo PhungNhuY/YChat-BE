@@ -40,3 +40,6 @@ lerna-debug.log*
 
 # mongo
 /mongo
+
+# secure
+/secure

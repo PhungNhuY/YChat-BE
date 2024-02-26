@@ -9,6 +9,9 @@ const validationSchema = Joi.object({
   MONGODB_PASSWORD: Joi.string().required(),
   MONGODB_DBNAME: Joi.string().required(),
   MONGODB_VOLUME_PATH: Joi.string().required(),
+
+  ACCESS_TOKEN_EXPIRATION_TIME: Joi.number().required(),
+  REFRESH_TOKEN_EXPIRATION_TIME: Joi.number().required(),
 });
 
 export default validationSchema;

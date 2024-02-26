@@ -15,6 +15,14 @@ export class UsersService {
     return await this.userModel.create(createUserData);
   }
 
+  async findLoginUser(email: string): Promise<User> {
+    const user = await this.userModel
+      .findOne({ email, deletedAt: null })
+      .select('+password')
+      .lean();
+    return user;
+  }
+
   private async validate(data: Partial<RegisterDto>, userId: string | null) {
     const uniqueFields: FilterQuery<User>[] = [];
     data.email && uniqueFields.push({ email: data.email });
