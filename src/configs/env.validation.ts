@@ -2,6 +2,7 @@ import * as Joi from 'joi';
 
 const validationSchema = Joi.object({
   PORT: Joi.number().required(),
+  NODE_ENV: Joi.string().required().valid('development', 'production'),
 
   MONGODB_HOST: Joi.string().required(),
   MONGODB_PORT: Joi.number().required(),
