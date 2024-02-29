@@ -6,6 +6,7 @@ import { UsersModule } from './modules/users/users.module';
 import validationSchema from './configs/env.validation';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './modules/auth/auth.module';
+import { EmailsModule } from './modules/emails/emails.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { AuthModule } from './modules/auth/auth.module';
     }),
     UsersModule,
     AuthModule,
+    EmailsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

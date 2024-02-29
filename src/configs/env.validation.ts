@@ -13,6 +13,11 @@ const validationSchema = Joi.object({
 
   ACCESS_TOKEN_EXPIRATION_TIME: Joi.number().required(),
   REFRESH_TOKEN_EXPIRATION_TIME: Joi.number().required(),
+
+  SMTP_HOST: Joi.string().required(),
+  SMTP_PORT: Joi.number().required(),
+  SMTP_USER: Joi.string().email().required(),
+  SMTP_PASS: Joi.string().required(),
 });
 
 export default validationSchema;
