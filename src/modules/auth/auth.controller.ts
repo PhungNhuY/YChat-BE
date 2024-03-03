@@ -12,12 +12,14 @@ import { LoginDto } from './dtos/login.dto';
 import { LoginResponseDto } from './dtos/login-response.dto';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { EmailsService } from '@modules/emails/emails.service';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
+    private readonly emailsService: EmailsService,
   ) {}
 
   @Post('register')

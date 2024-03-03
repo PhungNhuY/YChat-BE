@@ -10,6 +10,8 @@ import {
   refresh_token_private_key,
 } from '@constants/jwt.const';
 import { ConfigService } from '@nestjs/config';
+import { EmailsService } from '@modules/emails/emails.service';
+import { generateRandomString } from '@utils/random-string.util';
 
 @Injectable()
 export class AuthService {
@@ -17,9 +19,22 @@ export class AuthService {
     private readonly userService: UsersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly emailsService: EmailsService,
   ) {}
   async register(registerData: RegisterDto): Promise<User> {
-    const newUser = await this.userService.create(registerData);
+    const verificationCode = generateRandomString(64);
+    const verificationCodeExpiresAt =
+      Date.now() +
+      this.configService.get<number>('ACTIVATE_EMAIL_TOKEN_EXPIRATION_TIME');
+    const newUser = await this.userService.create({
+      ...registerData,
+      verificationCode,
+      verificationCodeExpiresAt,
+    });
+    await this.emailsService.sendRegistrationConfirmation(
+      newUser,
+      verificationCode,
+    );
     return newUser;
   }
 

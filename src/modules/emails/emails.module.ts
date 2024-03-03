@@ -24,5 +24,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     }),
   ],
   providers: [EmailsService],
+  exports: [EmailsService],
 })
 export class EmailsModule {}

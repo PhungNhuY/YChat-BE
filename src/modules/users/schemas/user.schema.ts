@@ -3,6 +3,7 @@ import { NextFunction } from 'express';
 import * as bcrypt from 'bcrypt';
 import { BaseSchemaSoftDelete } from '@common/base.schema';
 import { EUserGender, EUserStatus } from '@constants/user.constant';
+import { EMAIL_REGEX } from '@constants/regex.const';
 
 @Schema({
   timestamps: true,
@@ -31,7 +32,7 @@ export class User extends BaseSchemaSoftDelete {
   lastName: string;
 
   @Prop({
-    match: /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+    match: EMAIL_REGEX,
     required: true,
   })
   email: string;
@@ -61,6 +62,18 @@ export class User extends BaseSchemaSoftDelete {
     default: EUserStatus.INACTIVATE,
   })
   status: EUserStatus;
+
+  @Prop({
+    type: String,
+    select: false,
+  })
+  verificationCode: string;
+
+  @Prop({
+    type: Number,
+    select: false,
+  })
+  verificationCodeExpiresAt: number;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
@@ -75,6 +88,16 @@ export const UserSchemaFactory = () => {
       const salt = await bcrypt.genSalt(10);
       const hashPassword = await bcrypt.hash(this.password, salt);
       this.password = hashPassword;
+    }
+
+    // encode verificationCode
+    if (this.isModified('verificationCode') && !!this.verificationCode) {
+      const salt = await bcrypt.genSalt(10);
+      const hashVerificationCode = await bcrypt.hash(
+        this.verificationCode,
+        salt,
+      );
+      this.verificationCode = hashVerificationCode;
     }
     return next();
   });

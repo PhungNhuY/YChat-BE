@@ -10,7 +10,12 @@ export class UsersService {
     @InjectModel(User.name) private readonly userModel: Model<User>,
   ) {}
 
-  async create(createUserData: RegisterDto): Promise<User> {
+  async create(
+    createUserData: RegisterDto & {
+      verificationCode: string;
+      verificationCodeExpiresAt: number;
+    },
+  ): Promise<User> {
     await this.validate(createUserData, null);
     return await this.userModel.create(createUserData);
   }
