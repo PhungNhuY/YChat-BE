@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
 import { FilterQuery, Model } from 'mongoose';
@@ -9,6 +13,14 @@ export class UsersService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
   ) {}
+
+  async findOne(userId: string): Promise<User> {
+    const user = await this.userModel
+      .findOne({ _id: userId, deletedAt: null })
+      .lean();
+    if (!user) throw new NotFoundException('User not found');
+    return user;
+  }
 
   async create(
     createUserData: RegisterDto & {
