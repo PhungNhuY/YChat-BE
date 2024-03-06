@@ -6,9 +6,21 @@ import { JwtModule } from '@nestjs/jwt';
 import { EmailsModule } from '@modules/emails/emails.module';
 import { JwtAccessTokenStrategy } from './strategies/jwt-access-token.strategy';
 import { JwtRefreshTokenStrategy } from './strategies/jwt-refresh-token.strategy';
+import { MongooseModule } from '@nestjs/mongoose';
+import { User, UserSchemaFactory } from '@modules/users/schemas/user.schema';
 
 @Module({
-  imports: [UsersModule, JwtModule.register({}), EmailsModule],
+  imports: [
+    UsersModule,
+    JwtModule.register({}),
+    EmailsModule,
+    MongooseModule.forFeatureAsync([
+      {
+        name: User.name,
+        useFactory: UserSchemaFactory,
+      },
+    ]),
+  ],
   controllers: [AuthController],
   providers: [AuthService, JwtAccessTokenStrategy, JwtRefreshTokenStrategy],
 })

@@ -1,4 +1,9 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { RegisterDto } from './dtos/register.dto';
 import { UsersService } from '@modules/users/users.service';
 import { User } from '@modules/users/schemas/user.schema';
@@ -12,7 +17,9 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { EmailsService } from '@modules/emails/emails.service';
 import { generateRandomString } from '@utils/random-string.util';
-
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { EUserStatus } from '@constants/user.constant';
 @Injectable()
 export class AuthService {
   constructor(
@@ -20,12 +27,14 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly emailsService: EmailsService,
+    @InjectModel(User.name) private readonly userModel: Model<User>,
   ) {}
   async register(registerData: RegisterDto): Promise<User> {
     const verificationCode = generateRandomString(64);
     const verificationCodeExpiresAt =
       Date.now() +
-      this.configService.get<number>('ACTIVATE_EMAIL_TOKEN_EXPIRATION_TIME');
+      this.configService.get<number>('ACTIVATE_EMAIL_TOKEN_EXPIRATION_TIME') *
+        1000;
     const newUser = await this.userService.create({
       ...registerData,
       verificationCode,
@@ -72,6 +81,40 @@ export class AuthService {
       };
     }
     throw new UnauthorizedException(['Wrong credential']);
+  }
+
+  async activate(userId: string, code: string) {
+    const user = await this.userModel
+      .findOne({
+        _id: userId,
+        deletedAt: null,
+        status: EUserStatus.INACTIVATE,
+      })
+      .select('+verificationCode +verificationCodeExpiresAt')
+      .lean();
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (verifyPlainContentWithHashedContent(code, user.verificationCode)) {
+      if (user.verificationCodeExpiresAt < Date.now()) {
+        throw new BadRequestException('Verification code has expired');
+      }
+
+      await this.userModel.updateOne(
+        { _id: user._id },
+        {
+          $set: {
+            status: EUserStatus.ACTIVATED,
+            verificationCode: null,
+            verificationCodeExpiresAt: null,
+          },
+        },
+      );
+      return true;
+    }
+    throw new BadRequestException('Invalid verification code');
   }
 
   private generateToken(

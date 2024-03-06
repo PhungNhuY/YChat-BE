@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dtos/register.dto';
 import {
@@ -12,14 +12,13 @@ import { LoginDto } from './dtos/login.dto';
 import { LoginResponseDto } from './dtos/login-response.dto';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { EmailsService } from '@modules/emails/emails.service';
+import { ActivateQueryDto } from './dtos/activate-query.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
     private readonly configService: ConfigService,
-    private readonly emailsService: EmailsService,
   ) {}
 
   @Post('register')
@@ -64,5 +63,12 @@ export class AuthController {
     return buildSuccessResponse(
       transformObjectToResponse(res, LoginResponseDto),
     );
+  }
+
+  @Get('activate')
+  async activate(@Query() query: ActivateQueryDto) {
+    await this.authService.activate(query.uid, query.code);
+
+    return buildSuccessResponse();
   }
 }
