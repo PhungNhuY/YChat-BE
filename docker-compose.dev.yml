@@ -4,7 +4,7 @@ services:
   mongo:
     image: mongo:7.0
     restart: unless-stopped
-    container_name: y-chat-mongo
+    container_name: $MONGODB_CONTAINER_NAME
     ports:
       - $MONGODB_PORT:27017
     expose:

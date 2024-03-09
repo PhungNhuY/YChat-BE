@@ -24,6 +24,15 @@ async function bootstrap() {
   // cookie parser
   app.use(cookieParser());
 
+  // enable CORS
+  const corsOrigins: string[] = JSON.parse(
+    process.env.CORS_ALLOWED_LIST || '[]',
+  );
+  app.enableCors({
+    origin: corsOrigins,
+    credentials: true,
+  });
+
   await app.listen(process.env.PORT);
 }
 bootstrap();
