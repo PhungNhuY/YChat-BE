@@ -13,8 +13,10 @@ import { LoginResponseDto } from './dtos/login-response.dto';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { ActivateQueryDto } from './dtos/activate-query.dto';
+import { ApiTags } from '@nestjs/swagger';
 
 @Controller('auth')
+@ApiTags('auth')
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
