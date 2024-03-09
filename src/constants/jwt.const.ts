@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
-import * as crypto from 'crypto';
+import * as crypto from 'node:crypto';
 
 const secureFolderName = 'secure';
 
