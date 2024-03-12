@@ -4,9 +4,13 @@ import { GlobalExceptionFilter } from '@filters/global-exception.filter';
 import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import { configSwagger } from '@configs/api-docs.config';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // helmet
+  app.use(helmet());
 
   // global validation pipe
   app.useGlobalPipes(
