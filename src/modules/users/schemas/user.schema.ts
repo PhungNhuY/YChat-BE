@@ -64,6 +64,13 @@ export class User extends BaseSchemaSoftDelete {
   status: EUserStatus;
 
   @Prop({
+    required: true,
+    select: false,
+    type: Number,
+  })
+  validTokenIat: number;
+
+  @Prop({
     type: String,
     select: false,
   })

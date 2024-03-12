@@ -26,6 +26,7 @@ export class UsersService {
     createUserData: RegisterDto & {
       verificationCode: string;
       verificationCodeExpiresAt: number;
+      validTokenIat: number;
     },
   ): Promise<User> {
     await this.validate(createUserData, null);

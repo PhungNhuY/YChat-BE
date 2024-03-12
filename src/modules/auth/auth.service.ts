@@ -39,6 +39,7 @@ export class AuthService {
       ...registerData,
       verificationCode,
       verificationCodeExpiresAt,
+      validTokenIat: Math.round(Date.now() / 1000),
     });
     await this.emailsService.sendRegistrationConfirmation(
       newUser,

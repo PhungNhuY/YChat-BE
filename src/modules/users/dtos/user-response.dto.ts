@@ -25,4 +25,13 @@ export class UserResponseDto extends BaseResponseDto {
 
   @Exclude()
   password: string;
+
+  @Exclude()
+  verificationCode: string;
+
+  @Exclude()
+  verificationCodeExpiresAt: number;
+
+  @Exclude()
+  validTokenIat: number;
 }
