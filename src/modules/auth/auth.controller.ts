@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Query, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dtos/register.dto';
 import {
@@ -14,6 +22,9 @@ import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
 import { ActivateQueryDto } from './dtos/activate-query.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { JwtRefreshTokenGuard } from 'src/guards/jwt-refresh-token.guard';
+import { AuthData } from 'src/decorators/auth-data.decorator';
+import { RefreshResponseDto } from './dtos/refresh-response.dto';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -64,6 +75,28 @@ export class AuthController {
 
     return buildSuccessResponse(
       transformObjectToResponse(res, LoginResponseDto),
+    );
+  }
+
+  @Get('refresh')
+  @UseGuards(new JwtRefreshTokenGuard())
+  async refresh(
+    @AuthData() user: User,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const resData = await this.authService.refresh(user);
+    response.cookie('access_token', resData.access_token, {
+      httpOnly: true,
+      sameSite: 'strict',
+      path: '/',
+      maxAge:
+        this.configService.get<number>('ACCESS_TOKEN_EXPIRATION_TIME') * 1000,
+      domain: this.configService.get<string>('DOMAIN'),
+      secure: this.configService.get<string>('NODE_ENV') === 'production',
+    });
+
+    return buildSuccessResponse(
+      transformObjectToResponse(resData, RefreshResponseDto),
     );
   }
 

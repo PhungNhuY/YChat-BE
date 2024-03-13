@@ -20,6 +20,7 @@ import { generateRandomString } from '@utils/random-string.util';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { EUserStatus } from '@constants/user.constant';
+import { RefreshResponseDto } from './dtos/refresh-response.dto';
 @Injectable()
 export class AuthService {
   constructor(
@@ -116,6 +117,28 @@ export class AuthService {
       return true;
     }
     throw new BadRequestException('Invalid verification code');
+  }
+
+  async refresh(user: User): Promise<RefreshResponseDto> {
+    const payload = {
+      email: user.email,
+      _id: user._id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+    };
+    const access_token = this.generateToken(
+      payload,
+      access_token_private_key,
+      this.configService.get<number>('ACCESS_TOKEN_EXPIRATION_TIME'),
+    );
+    const access_token_expires_at =
+      Math.round(Date.now() / 1000) +
+      this.configService.get<number>('ACCESS_TOKEN_EXPIRATION_TIME');
+
+    return {
+      access_token,
+      access_token_expires_at,
+    };
   }
 
   private generateToken(
