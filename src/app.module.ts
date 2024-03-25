@@ -7,6 +7,8 @@ import validationSchema from './configs/env.validation';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from './modules/auth/auth.module';
 import { EmailsModule } from './modules/emails/emails.module';
+import { ConversationsModule } from './modules/conversations/conversations.module';
+import { MessagesModule } from './modules/messages/messages.module';
 
 @Module({
   imports: [
@@ -28,6 +30,8 @@ import { EmailsModule } from './modules/emails/emails.module';
     UsersModule,
     AuthModule,
     EmailsModule,
+    ConversationsModule,
+    MessagesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
