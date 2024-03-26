@@ -5,10 +5,10 @@ export class BaseResponseDto {
   @Type(() => String)
   _id: string;
 
-  @Expose()
+  @Exclude()
   created_at: Date;
 
-  @Expose()
+  @Exclude()
   updated_at: Date;
 
   @Exclude()

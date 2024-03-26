@@ -6,30 +6,19 @@ import { EUserGender, EUserStatus } from '@constants/user.constant';
 import { EMAIL_REGEX } from '@constants/regex.const';
 
 @Schema({
-  timestamps: true,
+  timestamps: {
+    createdAt: 'created_at',
+    updatedAt: 'updated_at',
+  },
 })
 export class User extends BaseSchemaSoftDelete {
   @Prop({
     maxlength: 64,
-    set: (first_name: string | null) => {
-      if (typeof first_name === 'string') {
-        return first_name.trim();
-      }
-      return first_name;
+    set: (first_name: string) => {
+      return first_name.trim();
     },
   })
-  firstName: string | null;
-
-  @Prop({
-    maxlength: 64,
-    set: (lastName: string | null) => {
-      if (typeof lastName === 'string') {
-        return lastName.trim();
-      }
-      return lastName;
-    },
-  })
-  lastName: string;
+  name: string;
 
   @Prop({
     match: EMAIL_REGEX,

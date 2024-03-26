@@ -7,5 +7,5 @@ export class BaseSchema {
 
 export class BaseSchemaSoftDelete extends BaseSchema {
   @Prop({ default: null })
-  deletedAt: Date;
+  deleted_at: Date;
 }

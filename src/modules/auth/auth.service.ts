@@ -123,8 +123,7 @@ export class AuthService {
     const payload = {
       email: user.email,
       _id: user._id,
-      firstName: user.firstName,
-      lastName: user.lastName,
+      name: user.name,
     };
     const access_token = this.generateToken(
       payload,

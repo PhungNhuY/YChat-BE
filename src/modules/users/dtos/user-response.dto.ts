@@ -3,10 +3,7 @@ import { Exclude, Expose } from 'class-transformer';
 
 export class UserResponseDto extends BaseResponseDto {
   @Expose()
-  firstName: string;
-
-  @Expose()
-  lastName: string;
+  name: string;
 
   @Expose()
   email: string;
