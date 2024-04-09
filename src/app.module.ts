@@ -9,6 +9,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { EmailsModule } from './modules/emails/emails.module';
 import { ConversationsModule } from './modules/conversations/conversations.module';
 import { MessagesModule } from './modules/messages/messages.module';
+import { MembersModule } from './modules/members/members.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { MessagesModule } from './modules/messages/messages.module';
     EmailsModule,
     ConversationsModule,
     MessagesModule,
+    MembersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

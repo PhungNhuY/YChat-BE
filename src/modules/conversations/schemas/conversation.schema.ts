@@ -6,41 +6,6 @@ export enum EConversationType {
   GROUP = 2,
 }
 
-export enum EConversationRole {
-  MEMBER = 1,
-  ADMIN = 2,
-}
-
-@Schema({
-  _id: false,
-})
-export class Member {
-  @Prop({
-    type: String,
-    required: true,
-    ref: 'User',
-  })
-  user: string;
-
-  @Prop({
-    maxlength: 64,
-    set: (nickname: string | null) => {
-      if (typeof nickname === 'string') {
-        return nickname.trim();
-      }
-      return nickname;
-    },
-  })
-  nickname: string | null;
-
-  @Prop({
-    type: Number,
-    enum: EConversationRole,
-    default: EConversationRole.MEMBER,
-  })
-  conversationRole: EConversationRole;
-}
-
 @Schema({
   timestamps: {
     createdAt: 'created_at',
@@ -56,14 +21,15 @@ export class Conversation extends BaseSchemaSoftDelete {
   type: EConversationType;
 
   @Prop({
-    required: true,
-    type: [Member],
-    minlength: 2,
-  })
-  member: Member[];
-
-  @Prop({
     type: String,
+    minlength: 1,
+    maxlength: 64,
+    set: (name: string) => {
+      return name.trim();
+    },
+    required: function () {
+      return this.type === EConversationType.GROUP;
+    },
   })
   name?: string;
 
@@ -71,6 +37,11 @@ export class Conversation extends BaseSchemaSoftDelete {
     type: String,
   })
   color?: string;
+
+  @Prop({
+    type: String,
+  })
+  avatar?: string;
 }
 
 export const ConversationSchema = SchemaFactory.createForClass(Conversation);
