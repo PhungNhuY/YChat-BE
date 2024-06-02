@@ -79,7 +79,7 @@ export class AuthController {
   }
 
   @Get('refresh')
-  @UseGuards(new JwtRefreshTokenGuard())
+  @UseGuards(JwtRefreshTokenGuard)
   async refresh(
     @AuthData() user: User,
     @Res({ passthrough: true }) response: Response,

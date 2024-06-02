@@ -30,6 +30,7 @@ export class AuthService {
     private readonly emailsService: EmailsService,
     @InjectModel(User.name) private readonly userModel: Model<User>,
   ) {}
+
   async register(registerData: RegisterDto): Promise<User> {
     const verificationCode = generateRandomString(64);
     const verificationCodeExpiresAt =
@@ -56,11 +57,7 @@ export class AuthService {
       verifyPlainContentWithHashedContent(loginData.password, user.password)
     ) {
       // token payload
-      const payload = {
-        email: user.email,
-        _id: user._id,
-        status: user.status,
-      };
+      const payload = this.genTokenPayload(user._id.toString(), user.status);
 
       // access token
       const access_token = this.generateToken(
@@ -120,11 +117,7 @@ export class AuthService {
   }
 
   async refresh(user: User): Promise<RefreshResponseDto> {
-    const payload = {
-      email: user.email,
-      _id: user._id,
-      name: user.name,
-    };
+    const payload = this.genTokenPayload(user._id.toString(), user.status);
     const access_token = this.generateToken(
       payload,
       access_token_private_key,
@@ -144,11 +137,21 @@ export class AuthService {
     payload: object,
     privateKey: string,
     expiresIn: number,
-  ) {
+  ): string {
     return this.jwtService.sign(payload, {
       algorithm: 'RS256',
       privateKey,
       expiresIn: `${expiresIn}s`,
     });
+  }
+
+  private genTokenPayload(
+    _id: string,
+    status: EUserStatus,
+  ): { _id: string; status: EUserStatus } {
+    return {
+      _id,
+      status,
+    };
   }
 }
