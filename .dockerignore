@@ -1,25 +1,13 @@
-# Versioning and metadata
 .git
 .gitignore
 .dockerignore
 
-# Build dependencies
 dist
 node_modules
 
-# Environment (contains sensitive data)
 .env
 .env.example
 
-# Files/folders not required for production
-husky
+.husky
 mongo
 secure
-.eslintrc.js
-.prettierignore
-.prettierrc
-commitlint.config.js
-Dockerfile
-docker-compose.dev.yml
-docker-compose.yml
-README.md
