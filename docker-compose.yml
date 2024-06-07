@@ -29,11 +29,9 @@ services:
       - ./.env
     volumes:
       - ./secure:/app/secure
-      - ./.env:/app/.env
     stdin_open: true
     tty: true
 
 networks:
   y-chat-network:
     driver: bridge
-    

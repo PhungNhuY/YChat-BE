@@ -11,6 +11,8 @@ export enum EMemberRole {
     createdAt: 'created_at',
     updatedAt: 'updated_at',
   },
+  versionKey: false,
+  collection: 'members',
 })
 export class Member extends BaseSchemaSoftDelete {
   @Prop({

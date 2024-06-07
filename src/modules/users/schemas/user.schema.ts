@@ -10,6 +10,8 @@ import { EMAIL_REGEX } from '@constants/regex.const';
     createdAt: 'created_at',
     updatedAt: 'updated_at',
   },
+  versionKey: false,
+  collection: 'users',
 })
 export class User extends BaseSchemaSoftDelete {
   @Prop({

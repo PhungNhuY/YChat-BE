@@ -11,6 +11,8 @@ export enum EConversationType {
     createdAt: 'created_at',
     updatedAt: 'updated_at',
   },
+  versionKey: false,
+  collection: 'conversations',
 })
 export class Conversation extends BaseSchemaSoftDelete {
   @Prop({
