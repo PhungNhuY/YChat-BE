@@ -36,15 +36,6 @@ export class CreateConversationDto {
   @IsEnum(EConversationType)
   type: EConversationType;
 
-  // @IsOptional()
-  // @IsString()
-  // @MinLength(1)
-  // @MaxLength(64)
-  // @Transform(({ value }) => {
-  //   return value.trim();
-  // })
-  // name?: string;
-
   @IsMongoId({ each: true })
   @IsArray()
   @ArrayUnique()

@@ -10,6 +10,9 @@ export class ConversationResponseDto extends BaseResponseDto {
   name: string;
 
   @Expose()
+  members: string[];
+
+  @Expose()
   color: string;
 
   @Expose()
