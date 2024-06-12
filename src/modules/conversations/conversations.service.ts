@@ -16,6 +16,8 @@ export class ConversationsService {
     private readonly conversationModel: Model<Conversation>,
     @InjectModel(Member.name)
     private readonly memberModel: Model<Member>,
+    @InjectModel(User.name)
+    private readonly userModel: Model<User>,
   ) {}
 
   async createConversation(
@@ -27,12 +29,41 @@ export class ConversationsService {
       throw new BadRequestException('Members is invalid');
     }
 
+    // check valid users
+    const numOfValidUsers = await this.userModel.countDocuments({
+      deleted_at: null,
+      _id: { $in: createConversationData.members },
+    });
+    if (numOfValidUsers !== createConversationData.members.length) {
+      throw new BadRequestException('Members is invalid');
+    }
+
+    // one-to-one conversation must be unique
+    if (createConversationData.type === EConversationType.ONE_TO_ONE) {
+      const conversationExisted = await this.conversationModel.exists({
+        type: EConversationType.ONE_TO_ONE,
+        deleted_at: null,
+        members: {
+          $all: createConversationData.members,
+          $size: 2,
+        },
+      });
+      if (conversationExisted) {
+        throw new BadRequestException('Conversation existed');
+      }
+    }
+
     const conversation = await transaction<Conversation>(
       this.connection,
       async (session: ClientSession) => {
         // create conversation
         const [conversation] = await this.conversationModel.create(
-          [{ type: createConversationData.type }],
+          [
+            {
+              type: createConversationData.type,
+              members: createConversationData.members,
+            },
+          ],
           { session },
         );
 
@@ -52,13 +83,6 @@ export class ConversationsService {
           }),
           { session },
         );
-
-        // add members to conversation
-        conversation.members = members.map((m) => m._id.toString());
-        await conversation.save({
-          validateBeforeSave: true,
-          session,
-        });
 
         conversation.members = members;
         return conversation;

@@ -13,6 +13,7 @@ export enum EMemberRole {
   },
   versionKey: false,
   collection: 'members',
+  _id: false,
 })
 export class Member extends BaseSchemaSoftDelete {
   @Prop({
@@ -53,3 +54,5 @@ export class Member extends BaseSchemaSoftDelete {
 }
 
 export const MemberSchema = SchemaFactory.createForClass(Member);
+
+MemberSchema.index({ user: 1, conversation: 1 }, { unique: true });
