@@ -15,6 +15,22 @@ export enum EMessageType {
   collection: 'messages',
 })
 export class Message extends BaseSchemaSoftDelete {
+  // from
+  @Prop({
+    required: true,
+    type: String,
+    ref: 'User',
+  })
+  user: string;
+
+  // to
+  @Prop({
+    required: true,
+    type: String,
+    ref: 'Conversation',
+  })
+  conversation: string;
+
   @Prop({
     type: Number,
     enum: EMessageType,
@@ -25,30 +41,9 @@ export class Message extends BaseSchemaSoftDelete {
   @Prop({
     required: true,
     type: String,
+    maxlength: 2000,
   })
   content: string;
-
-  // to
-  @Prop({
-    required: true,
-    type: String,
-    ref: 'Conversation',
-  })
-  conversation: string;
-
-  // from
-  @Prop({
-    required: true,
-    type: String,
-    ref: 'User',
-  })
-  user: string;
-
-  @Prop({
-    required: true,
-    type: Number,
-  })
-  sent_at: number; // unix time
 }
 
 export const MessageSchema = SchemaFactory.createForClass(Message);
