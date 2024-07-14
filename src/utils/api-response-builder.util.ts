@@ -5,8 +5,8 @@ export type MultiItemsResponse<T> = { items: T[]; total: number };
 export type ApiResponse<T> = {
   success?: boolean;
   data?: T | MultiItemsResponse<T>;
-  message?: string;
-  error?: any[];
+  error?: string;
+  message?: string | any[];
 };
 
 export function transformObjectToResponse<T>(data: object, dto: any): T {
@@ -35,12 +35,12 @@ export function buildSuccessResponse(data?: any): ApiResponse<any> {
 }
 
 export function buildErrorResponse(
-  message: string,
-  error?: any[],
+  error: string,
+  message?: string | any[],
 ): ApiResponse<any> {
   return {
     success: false,
-    message,
     error,
+    message,
   };
 }

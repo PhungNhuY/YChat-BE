@@ -29,14 +29,14 @@ export class GlobalExceptionFilter
       const isHttpException = exception instanceof HttpException;
 
       const status = isHttpException ? exception.getStatus() : 500;
-      const message = isHttpException
+      const error = isHttpException
         ? (exception.getResponse() as unknown as any).error
         : 'Internal server error';
-      const error = isHttpException
+      const message = isHttpException
         ? (exception.getResponse() as unknown as any).message
         : null;
 
-      response.status(status).json(buildErrorResponse(message, error));
+      response.status(status).json(buildErrorResponse(error, message));
     } else if (host.getType() === 'ws') {
       console.log('ws error');
     }

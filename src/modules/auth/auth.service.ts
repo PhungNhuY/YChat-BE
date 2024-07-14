@@ -54,7 +54,10 @@ export class AuthService {
     const user = await this.userService.findLoginUser(loginData.email);
     if (
       user &&
-      verifyPlainContentWithHashedContent(loginData.password, user.password)
+      (await verifyPlainContentWithHashedContent(
+        loginData.password,
+        user.password,
+      ))
     ) {
       // token payload
       const payload = this.genTokenPayload(user._id.toString(), user.status);
@@ -96,7 +99,9 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    if (verifyPlainContentWithHashedContent(code, user.verificationCode)) {
+    if (
+      await verifyPlainContentWithHashedContent(code, user.verificationCode)
+    ) {
       if (user.verificationCodeExpiresAt < Date.now()) {
         throw new BadRequestException('Verification code has expired');
       }
