@@ -52,8 +52,6 @@ export class Conversation extends BaseSchemaSoftDelete {
     type: String,
   })
   avatar?: string;
-
-  // TODO: friendship: boolean
 }
 
 export const ConversationSchema = SchemaFactory.createForClass(Conversation);
