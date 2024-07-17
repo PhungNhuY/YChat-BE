@@ -5,7 +5,7 @@ import { ValidationPipe } from '@nestjs/common';
 import * as cookieParser from 'cookie-parser';
 import { configSwagger } from '@configs/api-docs.config';
 import helmet from 'helmet';
-import { SocketIoAdapter } from '@common/SocketIoAdapter';
+import { WebSocketAdapter } from '@modules/websocket/websocket.adapter';
 import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
@@ -45,7 +45,7 @@ async function bootstrap() {
   configSwagger(app);
 
   // ws adapter
-  app.useWebSocketAdapter(new SocketIoAdapter(app, configService));
+  app.useWebSocketAdapter(new WebSocketAdapter(app));
 
   await app.listen(await configService.get<number>('PORT'));
 }

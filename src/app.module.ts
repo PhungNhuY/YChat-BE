@@ -10,6 +10,7 @@ import { EmailsModule } from './modules/emails/emails.module';
 import { ConversationsModule } from './modules/conversations/conversations.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { MembersModule } from './modules/members/members.module';
+import { WebsocketModule } from './modules/websocket/websocket.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { MembersModule } from './modules/members/members.module';
     ConversationsModule,
     MessagesModule,
     MembersModule,
+    WebsocketModule,
   ],
   controllers: [AppController],
   providers: [AppService],
