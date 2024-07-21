@@ -5,12 +5,15 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { AuthenticatedSocket } from '@utils/types';
-import {
-  Server,
-  //  Socket
-} from 'socket.io';
+import { Server } from 'socket.io';
 
-@WebSocketGateway()
+@WebSocketGateway(2805, {
+  path: '/ws',
+  cors: {
+    origin: ['http://localhost:2803'],
+    credentials: true,
+  },
+})
 export class WSGateway implements OnGatewayConnection {
   @WebSocketServer()
   server: Server;
