@@ -7,13 +7,7 @@ import {
 import { AuthenticatedSocket } from '@utils/types';
 import { Server } from 'socket.io';
 
-@WebSocketGateway(2805, {
-  path: '/ws',
-  cors: {
-    origin: ['http://localhost:2803'],
-    credentials: true,
-  },
-})
+@WebSocketGateway(2805)
 export class WSGateway implements OnGatewayConnection {
   @WebSocketServer()
   server: Server;
