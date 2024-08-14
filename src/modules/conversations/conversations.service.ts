@@ -6,6 +6,7 @@ import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Model, Connection, ClientSession } from 'mongoose';
 import { EMemberRole, Member } from '@modules/members/schemas/member.schema';
 import { transaction } from '@common/transaction';
+import { AuthData } from '@utils/types';
 
 @Injectable()
 export class ConversationsService {
@@ -22,10 +23,10 @@ export class ConversationsService {
 
   async createConversation(
     createConversationData: CreateConversationDto,
-    user: User,
+    authData: AuthData,
   ): Promise<Conversation> {
     // user must be a conversation member
-    if (!createConversationData.members.includes(user._id.toString())) {
+    if (!createConversationData.members.includes(authData._id)) {
       throw new BadRequestException('Members is invalid');
     }
 
@@ -74,7 +75,7 @@ export class ConversationsService {
               conversation: conversation._id,
               role:
                 conversation.type === EConversationType.GROUP &&
-                user._id.toString() === m
+                authData._id === m
                   ? EMemberRole.ADMIN
                   : EMemberRole.MEMBER,
               user: m,
@@ -91,4 +92,12 @@ export class ConversationsService {
 
     return conversation;
   }
+
+  async findAll() {}
+
+  async findOne() {}
+
+  async update() {}
+
+  async leave() {}
 }

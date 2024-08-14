@@ -23,8 +23,9 @@ import { ConfigService } from '@nestjs/config';
 import { ActivateQueryDto } from './dtos/activate-query.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { JwtRefreshTokenGuard } from 'src/guards/jwt-refresh-token.guard';
-import { AuthData } from 'src/decorators/auth-data.decorator';
+import { UseAuthData } from 'src/decorators/use-auth-data.decorator';
 import { RefreshResponseDto } from './dtos/refresh-response.dto';
+import { AuthData } from '@utils/types';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -81,10 +82,10 @@ export class AuthController {
   @Get('refresh')
   @UseGuards(JwtRefreshTokenGuard)
   async refresh(
-    @AuthData() user: User,
+    @UseAuthData() authData: AuthData,
     @Res({ passthrough: true }) response: Response,
   ) {
-    const resData = await this.authService.refresh(user);
+    const resData = await this.authService.refresh(authData);
     response.cookie('access_token', resData.access_token, {
       httpOnly: true,
       sameSite: 'strict',

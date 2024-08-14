@@ -5,6 +5,6 @@ export enum EUserGender {
 }
 
 export enum EUserStatus {
-  INACTIVATE = 1,
-  ACTIVATED = 2,
+  INACTIVE = 1,
+  ACTIVE = 2,
 }

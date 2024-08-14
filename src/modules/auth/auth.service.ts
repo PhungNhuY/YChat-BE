@@ -21,6 +21,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { EUserStatus } from '@constants/user.constant';
 import { RefreshResponseDto } from './dtos/refresh-response.dto';
+import { AuthData } from '@utils/types';
 @Injectable()
 export class AuthService {
   constructor(
@@ -60,7 +61,10 @@ export class AuthService {
       ))
     ) {
       // token payload
-      const payload = this.genTokenPayload(user._id.toString(), user.status);
+      const payload: AuthData = {
+        _id: user._id.toString(),
+        status: user.status,
+      };
 
       // access token
       const access_token = this.generateToken(
@@ -90,7 +94,7 @@ export class AuthService {
       .findOne({
         _id: userId,
         deletedAt: null,
-        status: EUserStatus.INACTIVATE,
+        status: EUserStatus.INACTIVE,
       })
       .select('+verificationCode +verificationCodeExpiresAt')
       .lean();
@@ -110,7 +114,7 @@ export class AuthService {
         { _id: user._id },
         {
           $set: {
-            status: EUserStatus.ACTIVATED,
+            status: EUserStatus.ACTIVE,
             verificationCode: null,
             verificationCodeExpiresAt: null,
           },
@@ -121,10 +125,9 @@ export class AuthService {
     throw new BadRequestException('Invalid verification code');
   }
 
-  async refresh(user: User): Promise<RefreshResponseDto> {
-    const payload = this.genTokenPayload(user._id.toString(), user.status);
+  async refresh(authData: AuthData): Promise<RefreshResponseDto> {
     const access_token = this.generateToken(
-      payload,
+      authData,
       access_token_private_key,
       this.configService.get<number>('ACCESS_TOKEN_EXPIRATION_TIME'),
     );
@@ -139,7 +142,7 @@ export class AuthService {
   }
 
   private generateToken(
-    payload: object,
+    payload: AuthData,
     privateKey: string,
     expiresIn: number,
   ): string {
@@ -148,15 +151,5 @@ export class AuthService {
       privateKey,
       expiresIn: `${expiresIn}s`,
     });
-  }
-
-  private genTokenPayload(
-    _id: string,
-    status: EUserStatus,
-  ): { _id: string; status: EUserStatus } {
-    return {
-      _id,
-      status,
-    };
   }
 }

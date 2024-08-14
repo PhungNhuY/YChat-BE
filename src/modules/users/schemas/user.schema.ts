@@ -4,6 +4,7 @@ import * as bcrypt from 'bcrypt';
 import { BaseSchemaSoftDelete } from '@common/base.schema';
 import { EUserGender, EUserStatus } from '@constants/user.constant';
 import { EMAIL_REGEX } from '@constants/regex.const';
+import { standardizeString } from '@utils/string.util';
 
 @Schema({
   timestamps: {
@@ -16,9 +17,10 @@ import { EMAIL_REGEX } from '@constants/regex.const';
 export class User extends BaseSchemaSoftDelete {
   @Prop({
     maxlength: 64,
-    set: (first_name: string) => {
-      return first_name.trim();
+    set: (name: string) => {
+      return standardizeString(name);
     },
+    required: true,
   })
   name: string;
 
@@ -35,22 +37,22 @@ export class User extends BaseSchemaSoftDelete {
   password: string;
 
   @Prop()
-  avatar: string;
+  avatar?: string;
 
   @Prop()
-  DOB: Date;
+  DOB?: Date;
 
   @Prop({
     type: Number,
     enum: EUserGender,
   })
-  gender: EUserGender;
+  gender?: EUserGender;
 
   @Prop({
     required: true,
     type: Number,
     enum: EUserStatus,
-    default: EUserStatus.INACTIVATE,
+    default: EUserStatus.INACTIVE,
   })
   status: EUserStatus;
 
@@ -65,13 +67,13 @@ export class User extends BaseSchemaSoftDelete {
     type: String,
     select: false,
   })
-  verificationCode: string;
+  verificationCode?: string;
 
   @Prop({
     type: Number,
     select: false,
   })
-  verificationCodeExpiresAt: number;
+  verificationCodeExpiresAt?: number;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

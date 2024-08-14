@@ -12,11 +12,7 @@ import {
 export class RegisterDto {
   @MaxLength(64)
   @IsNotEmpty()
-  firstName: string;
-
-  @MaxLength(64)
-  @IsNotEmpty()
-  lastName: string;
+  name: string;
 
   @IsEmail()
   @IsNotEmpty()
@@ -28,9 +24,9 @@ export class RegisterDto {
 
   @IsDateString()
   @IsOptional()
-  DOB: Date;
+  DOB?: Date;
 
   @IsEnum(EUserGender)
   @IsOptional()
-  gender: EUserGender;
+  gender?: EUserGender;
 }

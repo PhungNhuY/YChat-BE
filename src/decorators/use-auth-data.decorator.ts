@@ -1,10 +1,10 @@
 import { createParamDecorator, ExecutionContext } from '@nestjs/common';
 
 /**
- * get user data from request
- * @param data - optional get one parameter from user object
+ * get token payload from request
+ * @param data - optional get one parameter from payload object
  */
-export const AuthData = createParamDecorator(
+export const UseAuthData = createParamDecorator(
   (data: string, ctx: ExecutionContext) => {
     const request = ctx.switchToHttp().getRequest();
     const user = request.user;
