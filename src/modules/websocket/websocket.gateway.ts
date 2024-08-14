@@ -7,7 +7,8 @@ import {
 import { AuthenticatedSocket } from '@utils/types';
 import { Server } from 'socket.io';
 
-@WebSocketGateway(2805)
+/* We cannot use env in the decorator, so the websocket will be configured in the adapter */
+@WebSocketGateway()
 export class WSGateway implements OnGatewayConnection {
   @WebSocketServer()
   server: Server;

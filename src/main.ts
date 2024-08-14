@@ -45,7 +45,7 @@ async function bootstrap() {
   configSwagger(app);
 
   // ws adapter
-  app.useWebSocketAdapter(new WebSocketAdapter(app));
+  app.useWebSocketAdapter(new WebSocketAdapter(app, configService));
 
   await app.listen(await configService.get<number>('PORT'));
 }
