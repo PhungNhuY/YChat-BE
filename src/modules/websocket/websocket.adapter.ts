@@ -1,9 +1,8 @@
 import { access_token_public_key } from '@constants/jwt.const';
-import { User } from '@modules/users/schemas/user.schema';
 import { INestApplicationContext } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { IoAdapter } from '@nestjs/platform-socket.io';
-import { AuthenticatedSocket } from '@utils/types';
+import { AuthData, AuthenticatedSocket } from '@utils/types';
 import * as cookie from 'cookie';
 import * as jwt from 'jsonwebtoken';
 import { ServerOptions } from 'socket.io';
@@ -43,7 +42,7 @@ export class WebSocketAdapter extends IoAdapter {
           if (error) {
             return next(new Error('Invalid access token'));
           }
-          socket.user = payload as User;
+          socket.authData = payload as AuthData;
         },
       );
 

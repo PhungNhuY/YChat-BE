@@ -5,7 +5,7 @@ import { User } from '@modules/users/schemas/user.schema';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Model, Connection, ClientSession } from 'mongoose';
 import { EMemberRole, Member } from '@modules/members/schemas/member.schema';
-import { transaction } from '@common/transaction';
+import { mongooseTransaction } from '@common/mongoose-transaction';
 import { AuthData } from '@utils/types';
 
 @Injectable()
@@ -54,7 +54,7 @@ export class ConversationsService {
       }
     }
 
-    const conversation = await transaction<Conversation>(
+    const conversation = await mongooseTransaction<Conversation>(
       this.connection,
       async (session: ClientSession) => {
         // create conversation

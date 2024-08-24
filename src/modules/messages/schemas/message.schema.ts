@@ -1,4 +1,8 @@
 import { BaseSchemaSoftDelete } from '@common/base.schema';
+import {
+  MESSAGE_MAX_LENGTH,
+  MESSAGE_MIN_LENGTH,
+} from '@constants/message.constant';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 export enum EMessageType {
@@ -41,7 +45,8 @@ export class Message extends BaseSchemaSoftDelete {
   @Prop({
     required: true,
     type: String,
-    maxlength: 2000,
+    maxlength: MESSAGE_MAX_LENGTH,
+    minlength: MESSAGE_MIN_LENGTH,
   })
   content: string;
 }

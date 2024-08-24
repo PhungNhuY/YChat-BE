@@ -16,7 +16,6 @@ module.exports = {
         'revert', // Revert lại commit trước đó
         'ci', // Thay đổi cấu hình CI/CD
         'build', // Build tệp tin
-        'merge', // merge code
       ],
     ],
     'type-case': [2, 'always', 'lower-case'],

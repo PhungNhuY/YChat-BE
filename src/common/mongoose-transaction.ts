@@ -1,6 +1,6 @@
 import { ClientSession, Connection } from 'mongoose';
 
-export async function transaction<T>(
+export async function mongooseTransaction<T>(
   connection: Connection,
   callback: (session: ClientSession) => Promise<T>,
 ): Promise<T> {
