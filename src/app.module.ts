@@ -11,6 +11,7 @@ import { ConversationsModule } from './modules/conversations/conversations.modul
 import { MessagesModule } from './modules/messages/messages.module';
 import { MembersModule } from './modules/members/members.module';
 import { WebsocketModule } from './modules/websocket/websocket.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { WebsocketModule } from './modules/websocket/websocket.module';
       }),
       inject: [ConfigService],
     }),
+    EventEmitterModule.forRoot(),
     UsersModule,
     AuthModule,
     EmailsModule,
