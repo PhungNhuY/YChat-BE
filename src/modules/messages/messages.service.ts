@@ -37,6 +37,6 @@ export class MessagesService {
       select: 'name avatar',
     });
 
-    this.eventEmitter.emit('message.new', message);
+    this.eventEmitter.emit('message.new', message.toObject());
   }
 }
