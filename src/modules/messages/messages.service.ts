@@ -5,8 +5,6 @@ import { Model } from 'mongoose';
 import { CreateMessageDto } from './dtos/create-message.dto';
 import { AuthData } from '@utils/types';
 import { Conversation } from '@modules/conversations/schemas/conversation.schema';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-
 @Injectable()
 export class MessagesService {
   constructor(
@@ -14,7 +12,6 @@ export class MessagesService {
     private readonly messageModel: Model<Message>,
     @InjectModel(Conversation.name)
     private readonly conversationModel: Model<Conversation>,
-    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async create(createMessageData: CreateMessageDto, authData: AuthData) {
@@ -37,6 +34,6 @@ export class MessagesService {
       select: 'name avatar',
     });
 
-    this.eventEmitter.emit('message.new', message.toObject());
+    return message;
   }
 }

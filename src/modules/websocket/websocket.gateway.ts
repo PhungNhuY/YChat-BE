@@ -29,6 +29,7 @@ export class WSGateway implements OnGatewayConnection, OnGatewayDisconnect {
   handleConnection(socket: AuthenticatedSocket, ...args: any[]) {
     // add socket to room by userId
     socket.join(socket.authData._id);
+    socket.emit('onConnected', true);
   }
 
   handleDisconnect(socket: AuthenticatedSocket) {
