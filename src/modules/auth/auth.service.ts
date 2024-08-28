@@ -8,7 +8,7 @@ import { RegisterDto } from './dtos/register.dto';
 import { UsersService } from '@modules/users/users.service';
 import { User } from '@modules/users/schemas/user.schema';
 import { LoginDto } from './dtos/login.dto';
-import { verifyPlainContentWithHashedContent } from '@utils/secure.util';
+import { compare } from '@utils/hash.util';
 import { JwtService } from '@nestjs/jwt';
 import {
   access_token_private_key,
@@ -53,13 +53,7 @@ export class AuthService {
 
   async login(loginData: LoginDto) {
     const user = await this.userService.findLoginUser(loginData.email);
-    if (
-      user &&
-      (await verifyPlainContentWithHashedContent(
-        loginData.password,
-        user.password,
-      ))
-    ) {
+    if (user && (await compare(loginData.password, user.password))) {
       // token payload
       const payload: AuthData = {
         _id: user._id.toString(),
@@ -103,9 +97,7 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    if (
-      await verifyPlainContentWithHashedContent(code, user.verificationCode)
-    ) {
+    if (await compare(code, user.verificationCode)) {
       if (user.verificationCodeExpiresAt < Date.now()) {
         throw new BadRequestException('Verification code has expired');
       }

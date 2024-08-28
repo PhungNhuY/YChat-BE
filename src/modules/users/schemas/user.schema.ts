@@ -1,10 +1,10 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { NextFunction } from 'express';
-import * as bcrypt from 'bcrypt';
 import { BaseSchemaSoftDelete } from '@common/base.schema';
 import { EUserGender, EUserStatus } from '@constants/user.constant';
 import { EMAIL_REGEX } from '@constants/regex.const';
 import { standardizeString } from '@utils/string.util';
+import { hash } from '@utils/hash.util';
 
 @Schema({
   timestamps: {
@@ -83,20 +83,15 @@ export const UserSchemaFactory = () => {
 
   // TODO check this middleware when updateOne...
   user_schema.pre('save', async function (next: NextFunction) {
-    // encode password
+    // hash password
     if (this.isModified('password')) {
-      const salt = await bcrypt.genSalt(10);
-      const hashPassword = await bcrypt.hash(this.password, salt);
+      const hashPassword = await hash(this.password);
       this.password = hashPassword;
     }
 
-    // encode verificationCode
+    // hash verificationCode
     if (this.isModified('verificationCode') && !!this.verificationCode) {
-      const salt = await bcrypt.genSalt(10);
-      const hashVerificationCode = await bcrypt.hash(
-        this.verificationCode,
-        salt,
-      );
+      const hashVerificationCode = await hash(this.verificationCode);
       this.verificationCode = hashVerificationCode;
     }
     return next();
