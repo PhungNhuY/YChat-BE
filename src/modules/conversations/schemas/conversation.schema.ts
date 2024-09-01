@@ -1,5 +1,5 @@
 import { BaseSchemaSoftDelete } from '@common/base.schema';
-import { Member } from '@modules/members/schemas/member.schema';
+import { Member } from './member.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 export enum EConversationType {
@@ -37,11 +37,10 @@ export class Conversation extends BaseSchemaSoftDelete {
   name?: string;
 
   @Prop({
-    type: Array<string>,
-    ref: 'Member',
+    type: Array<Member>,
     default: [],
   })
-  members: Array<string | Member>;
+  members: Array<Member>;
 
   @Prop({
     type: String,

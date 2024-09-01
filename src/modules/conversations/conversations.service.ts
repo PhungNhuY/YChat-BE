@@ -3,10 +3,12 @@ import { CreateConversationDto } from './dtos/create-conversation.dto';
 import { Conversation, EConversationType } from './schemas/conversation.schema';
 import { User } from '@modules/users/schemas/user.schema';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Model, Connection, ClientSession } from 'mongoose';
-import { EMemberRole, Member } from '@modules/members/schemas/member.schema';
-import { mongooseTransaction } from '@common/mongoose-transaction';
+import { Model, Connection } from 'mongoose';
 import { AuthData } from '@utils/types';
+import { ApiQueryDto } from '@common/api-query.dto';
+import { MultiItemsResponse } from '@utils/api-response-builder.util';
+import { Message } from '@modules/messages/schemas/message.schema';
+import { EMemberRole, Member } from './schemas/member.schema';
 
 @Injectable()
 export class ConversationsService {
@@ -15,10 +17,10 @@ export class ConversationsService {
     private readonly connection: Connection,
     @InjectModel(Conversation.name)
     private readonly conversationModel: Model<Conversation>,
-    @InjectModel(Member.name)
-    private readonly memberModel: Model<Member>,
     @InjectModel(User.name)
     private readonly userModel: Model<User>,
+    @InjectModel(Message.name)
+    private readonly messageModel: Model<Message>,
   ) {}
 
   async createConversation(
@@ -45,8 +47,10 @@ export class ConversationsService {
         type: EConversationType.ONE_TO_ONE,
         deleted_at: null,
         members: {
-          $all: createConversationData.members,
           $size: 2,
+        },
+        'members.user': {
+          $all: createConversationData.members,
         },
       });
       if (conversationExisted) {
@@ -54,48 +58,39 @@ export class ConversationsService {
       }
     }
 
-    const conversation = await mongooseTransaction<Conversation>(
-      this.connection,
-      async (session: ClientSession) => {
-        // create conversation
-        const [conversation] = await this.conversationModel.create(
-          [
-            {
-              type: createConversationData.type,
-              members: createConversationData.members,
-            },
-          ],
-          { session },
-        );
-
-        // create members
-        const members = await this.memberModel.insertMany(
-          createConversationData.members.map((m) => {
-            return {
-              conversation: conversation._id,
-              role:
-                conversation.type === EConversationType.GROUP &&
-                authData._id === m
-                  ? EMemberRole.ADMIN
-                  : EMemberRole.MEMBER,
-              user: m,
-              deleted_at: null,
-            };
-          }),
-          { session },
-        );
-
-        conversation.members = members;
-        return conversation;
+    // create conversation
+    // init members
+    const members = createConversationData.members.map((m): Member => {
+      return {
+        user: m,
+        role:
+          createConversationData.type === EConversationType.ONE_TO_ONE
+            ? EMemberRole.MEMBER
+            : authData._id === m
+              ? EMemberRole.ADMIN
+              : EMemberRole.MEMBER,
+      };
+    });
+    // create
+    const [conversation] = await this.conversationModel.create([
+      {
+        type: createConversationData.type,
+        members: members,
       },
-    );
-
+    ]);
     return conversation;
   }
 
-  async findAll() {}
-
   async findOne() {}
+
+  async findAll(authData: AuthData, query: ApiQueryDto) {
+    // : Promise<MultiItemsResponse<Conversation>>
+    // const lastMessageEachConversation = await this.messageModel.aggregate([
+    //   {
+    //     $match: {
+    //   }
+    // ])
+  }
 
   async update() {}
 

@@ -1,11 +1,7 @@
-import { BaseResponseDto } from '@common/base-response.dto';
 import { Expose } from 'class-transformer';
 import { EMemberRole } from '../schemas/member.schema';
 
-export class MemberResponseDto extends BaseResponseDto {
-  @Expose()
-  conversation: string;
-
+export class MemberResponseDto {
   @Expose()
   user: string;
 

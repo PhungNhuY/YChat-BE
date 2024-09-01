@@ -85,14 +85,14 @@ export const UserSchemaFactory = () => {
   user_schema.pre('save', async function (next: NextFunction) {
     // hash password
     if (this.isModified('password')) {
-      const hashPassword = await hash(this.password);
-      this.password = hashPassword;
+      const hashedPassword = await hash(this.password);
+      this.password = hashedPassword;
     }
 
     // hash verificationCode
     if (this.isModified('verificationCode') && !!this.verificationCode) {
-      const hashVerificationCode = await hash(this.verificationCode);
-      this.verificationCode = hashVerificationCode;
+      const hashedVerificationCode = await hash(this.verificationCode);
+      this.verificationCode = hashedVerificationCode;
     }
     return next();
   });

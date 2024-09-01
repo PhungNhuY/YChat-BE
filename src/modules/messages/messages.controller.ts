@@ -20,11 +20,11 @@ export class MessagesController {
     @Body() createMessageData: CreateMessageDto,
     @UseAuthData() authData: AuthData,
   ) {
-    const message = await this.messageService.create(
+    const newMessageData = await this.messageService.create(
       createMessageData,
       authData,
     );
-    this.eventEmitter.emit('message.new', message.toObject());
+    this.eventEmitter.emit('message.new', newMessageData);
     return buildSuccessResponse();
   }
 }

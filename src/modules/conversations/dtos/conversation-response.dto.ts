@@ -1,7 +1,8 @@
 import { Expose, Type } from 'class-transformer';
 import { EConversationType } from '../schemas/conversation.schema';
 import { BaseResponseDto } from '@common/base-response.dto';
-import { MemberResponseDto } from '@modules/members/dtos/member-response.dto';
+import { MessageResponseDto } from '@modules/messages/dtos/message-response.dto';
+import { MemberResponseDto } from './member-response.dto';
 
 export class ConversationResponseDto extends BaseResponseDto {
   @Expose()
@@ -19,4 +20,8 @@ export class ConversationResponseDto extends BaseResponseDto {
 
   @Expose()
   avatar: string;
+
+  @Expose()
+  @Type(() => MessageResponseDto)
+  lastMessage?: MessageResponseDto;
 }

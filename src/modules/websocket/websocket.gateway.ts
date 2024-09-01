@@ -1,6 +1,6 @@
 import { Conversation } from '@modules/conversations/schemas/conversation.schema';
 import { MessageResponseDto } from '@modules/messages/dtos/message-response.dto';
-import { Message } from '@modules/messages/schemas/message.schema';
+import { Member } from '@modules/conversations/schemas/member.schema';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import {
@@ -11,7 +11,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { transformObjectToResponse } from '@utils/api-response-builder.util';
-import { AuthenticatedSocket } from '@utils/types';
+import { AuthenticatedSocket, NewMessageData } from '@utils/types';
 import { Model } from 'mongoose';
 import { Server } from 'socket.io';
 
@@ -43,23 +43,14 @@ export class WSGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @OnEvent('message.new')
-  async handleNewMessageEvent(message: Message) {
-    // find conversation
-    const conversation = await this.conversationModel
-      .findOne({
-        deleted_at: null,
-        _id: message.conversation,
-      })
-      .lean();
-    if (!conversation) return;
-
+  async handleNewMessageEvent(newMessageData: NewMessageData) {
     // send message to members
-    conversation.members.forEach((memberId: string) => {
+    newMessageData.conversation.members.forEach((member: Member) => {
       this.server
-        .to(memberId)
+        .to(member.user)
         .emit(
           'onMessage',
-          transformObjectToResponse(message, MessageResponseDto),
+          transformObjectToResponse(newMessageData.message, MessageResponseDto),
         );
     });
   }

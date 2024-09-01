@@ -10,6 +10,6 @@ export async function compare(
   plain_text: string,
   hashed_text: string,
 ): Promise<boolean> {
-  const isMatching = await compare(plain_text, hashed_text);
+  const isMatching = await bcryptjs.compare(plain_text, hashed_text);
   return !!isMatching;
 }

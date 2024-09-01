@@ -3,7 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Message } from './schemas/message.schema';
 import { Model } from 'mongoose';
 import { CreateMessageDto } from './dtos/create-message.dto';
-import { AuthData } from '@utils/types';
+import { AuthData, NewMessageData } from '@utils/types';
 import { Conversation } from '@modules/conversations/schemas/conversation.schema';
 @Injectable()
 export class MessagesService {
@@ -14,15 +14,19 @@ export class MessagesService {
     private readonly conversationModel: Model<Conversation>,
   ) {}
 
-  async create(createMessageData: CreateMessageDto, authData: AuthData) {
+  async create(
+    createMessageData: CreateMessageDto,
+    authData: AuthData,
+  ): Promise<NewMessageData> {
     const conversation = await this.conversationModel
       .findOne({
         _id: createMessageData.conversation,
         deleted_at: null,
-        members: authData._id,
+        'members.user': authData._id,
       })
       .lean();
     if (!conversation) throw new BadRequestException('Conversation not found');
+
     let message = await this.messageModel.create({
       user: authData._id,
       ...createMessageData,
@@ -34,6 +38,6 @@ export class MessagesService {
       select: 'name avatar',
     });
 
-    return message;
+    return { message: message.toObject(), conversation };
   }
 }

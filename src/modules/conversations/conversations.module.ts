@@ -6,8 +6,11 @@ import {
   Conversation,
   ConversationSchema,
 } from './schemas/conversation.schema';
-import { Member, MemberSchema } from '@modules/members/schemas/member.schema';
 import { User, UserSchema } from '@modules/users/schemas/user.schema';
+import {
+  Message,
+  MessageSchema,
+} from '@modules/messages/schemas/message.schema';
 
 @Module({
   imports: [
@@ -17,12 +20,12 @@ import { User, UserSchema } from '@modules/users/schemas/user.schema';
         schema: ConversationSchema,
       },
       {
-        name: Member.name,
-        schema: MemberSchema,
-      },
-      {
         name: User.name,
         schema: UserSchema,
+      },
+      {
+        name: Message.name,
+        schema: MessageSchema,
       },
     ]),
   ],
