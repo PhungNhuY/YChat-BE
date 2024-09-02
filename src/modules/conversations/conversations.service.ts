@@ -83,13 +83,33 @@ export class ConversationsService {
 
   async findOne() {}
 
-  async findAll(authData: AuthData, query: ApiQueryDto) {
-    // : Promise<MultiItemsResponse<Conversation>>
-    // const lastMessageEachConversation = await this.messageModel.aggregate([
-    //   {
-    //     $match: {
-    //   }
-    // ])
+  async lastConversations(
+    authData: AuthData,
+    query: ApiQueryDto,
+  ): Promise<MultiItemsResponse<Conversation>> {
+    const conversations = await this.messageModel.aggregate([
+      {
+        $match: {
+          deleted_at: null,
+        },
+      },
+      {
+        $sort: {
+          created_at: -1,
+        },
+      },
+      {
+        $group: {
+          _id: '$conversation',
+          message: { $first: '$$ROOT' },
+        },
+      },
+    ]);
+    console.log(conversations);
+    return {
+      items: conversations,
+      total: conversations.length,
+    };
   }
 
   async update() {}

@@ -5,6 +5,7 @@ import { CreateConversationDto } from './dtos/create-conversation.dto';
 import { JwtAccessTokenGuard } from 'src/guards/jwt-access-token.guard';
 import {
   buildSuccessResponse,
+  transformArrayToResponse,
   transformObjectToResponse,
 } from '@utils/api-response-builder.util';
 import { ConversationResponseDto } from './dtos/conversation-response.dto';
@@ -31,15 +32,16 @@ export class ConversationsController {
   }
 
   @Get()
-  async findAll(
+  async lastConversations(
     @UseAuthData() authData: AuthData,
     @Query() query: ApiQueryDto,
   ) {
-    const conversations = await this.conversationsService.findAll(
+    const { items, total } = await this.conversationsService.lastConversations(
       authData,
       query,
     );
-    return buildSuccessResponse();
-    // transformObjectToResponse(conversations, ConversationResponseDto),
+    return buildSuccessResponse(
+      transformArrayToResponse({ items, total }, ConversationResponseDto),
+    );
   }
 }
