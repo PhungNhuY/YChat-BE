@@ -89,23 +89,53 @@ export class ConversationsService {
   ): Promise<MultiItemsResponse<Conversation>> {
     const conversations = await this.messageModel.aggregate([
       {
-        $match: {
-          deleted_at: null,
-        },
+        $match: { deleted_at: null },
       },
       {
-        $sort: {
-          created_at: -1,
-        },
-      },
-      {
+        // group by conversation and find max created_at with each conversation
+        // push all messages to records
         $group: {
           _id: '$conversation',
-          message: { $first: '$$ROOT' },
+          lastMessageAt: { $max: '$created_at' },
+          records: { $push: '$$ROOT' },
         },
       },
+      {
+        // sort records desc by lastMessageAt
+        $sort: { lastMessageAt: -1 },
+      },
+      {
+        $project: {
+          // filter records by lastMessageAt -> last message
+          lastMessage: {
+            $filter: {
+              input: '$records',
+              cond: {
+                $eq: ['$$this.created_at', '$lastMessageAt'],
+              },
+              limit: 1,
+            },
+          },
+          // convert id to ObjectId
+          conversation: { $toObjectId: '$_id' },
+        },
+      },
+      {
+        // remove no more needed fields
+        $project: { lastMessageAt: 0, _id: 0 },
+      },
+      {
+        // lookup conversation
+        $lookup: {
+          from: 'conversations',
+          localField: 'conversation',
+          foreignField: '_id',
+          as: 'conversation',
+        },
+      },
+      { $unwind: '$conversation' },
     ]);
-    console.log(conversations);
+    console.log(JSON.stringify(conversations, null, 4));
     return {
       items: conversations,
       total: conversations.length,

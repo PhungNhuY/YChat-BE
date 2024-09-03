@@ -30,9 +30,6 @@ export class Conversation extends BaseSchemaSoftDelete {
     set: (name: string) => {
       return name.trim();
     },
-    required: function () {
-      return this.type === EConversationType.GROUP;
-    },
   })
   name?: string;
 
