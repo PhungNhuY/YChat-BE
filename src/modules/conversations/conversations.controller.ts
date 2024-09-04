@@ -36,12 +36,12 @@ export class ConversationsController {
     @UseAuthData() authData: AuthData,
     @Query() query: ApiQueryDto,
   ) {
-    const { items, total } = await this.conversationsService.lastConversations(
+    const data = await this.conversationsService.lastConversations(
       authData,
       query,
     );
     return buildSuccessResponse(
-      transformArrayToResponse({ items, total }, ConversationResponseDto),
+      transformArrayToResponse(data, ConversationResponseDto),
     );
   }
 }

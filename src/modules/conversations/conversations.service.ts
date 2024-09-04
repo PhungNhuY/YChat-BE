@@ -87,21 +87,42 @@ export class ConversationsService {
     authData: AuthData,
     query: ApiQueryDto,
   ): Promise<MultiItemsResponse<Conversation>> {
-    const conversations = await this.messageModel.aggregate([
+    const page = query.page || 1;
+    const limit = query.limit || 10;
+    const skip = (page - 1) * limit;
+
+    // get ids of my conversations
+    const myConversationIds = (
+      await this.conversationModel
+        .find({
+          members: {
+            $elemMatch: {
+              user: authData._id,
+            },
+          },
+        })
+        .distinct('_id')
+    ).map((id) => id.toString());
+
+    // get conversations by last message
+    let conversations = await this.messageModel.aggregate([
       {
-        $match: { deleted_at: null },
+        $match: {
+          deleted_at: null,
+          conversation: { $in: myConversationIds },
+        },
       },
+      // group by conversation and find max created_at with each conversation
+      // push all messages to records
       {
-        // group by conversation and find max created_at with each conversation
-        // push all messages to records
         $group: {
           _id: '$conversation',
           lastMessageAt: { $max: '$created_at' },
           records: { $push: '$$ROOT' },
         },
       },
+      // sort records desc by lastMessageAt
       {
-        // sort records desc by lastMessageAt
         $sort: { lastMessageAt: -1 },
       },
       {
@@ -120,12 +141,17 @@ export class ConversationsService {
           conversation: { $toObjectId: '$_id' },
         },
       },
+      // change last message from array to object
       {
-        // remove no more needed fields
-        $project: { lastMessageAt: 0, _id: 0 },
+        $addFields: {
+          lastMessage: { $arrayElemAt: ['$lastMessage', 0] },
+        },
       },
+      // pagination
+      { $skip: skip },
+      { $limit: limit },
+      // lookup conversation
       {
-        // lookup conversation
         $lookup: {
           from: 'conversations',
           localField: 'conversation',
@@ -134,11 +160,41 @@ export class ConversationsService {
         },
       },
       { $unwind: '$conversation' },
+      // lookup last message user
+      {
+        $set: {
+          'lastMessage.user': { $toObjectId: '$lastMessage.user' },
+        },
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'lastMessage.user',
+          foreignField: '_id',
+          as: 'lastMessage.user',
+        },
+      },
+      { $unwind: '$lastMessage.user' },
+      // move last message to conversation
+      {
+        $addFields: {
+          'conversation.lastMessage': '$lastMessage',
+        },
+      },
+      // remove no more needed fields
+      {
+        $project: {
+          lastMessage: 0,
+          lastMessageAt: 0,
+          _id: 0,
+        },
+      },
     ]);
-    console.log(JSON.stringify(conversations, null, 4));
+    conversations = conversations.map((c) => c.conversation);
+
     return {
       items: conversations,
-      total: conversations.length,
+      total: myConversationIds.length,
     };
   }
 
