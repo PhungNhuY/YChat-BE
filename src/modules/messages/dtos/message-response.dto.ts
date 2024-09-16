@@ -1,8 +1,8 @@
 import { BaseResponseDto } from '@common/base-response.dto';
-import { EConversationType } from '@modules/conversations/schemas/conversation.schema';
 import { UserResponseDto } from '@modules/users/dtos/user-response.dto';
 import { User } from '@modules/users/schemas/user.schema';
 import { Expose, Transform, Type } from 'class-transformer';
+import { EMessageType } from '../schemas/message.schema';
 
 export class MessageResponseDto extends BaseResponseDto {
   @Expose()
@@ -13,7 +13,7 @@ export class MessageResponseDto extends BaseResponseDto {
   conversation: string;
 
   @Expose()
-  type: EConversationType;
+  type: EMessageType;
 
   @Expose()
   content: string;

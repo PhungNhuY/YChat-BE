@@ -1,9 +1,11 @@
-import { Expose } from 'class-transformer';
+import { Expose, Type } from 'class-transformer';
 import { EMemberRole } from '../schemas/member.schema';
+import { UserResponseDto } from '@modules/users/dtos/user-response.dto';
 
 export class MemberResponseDto {
   @Expose()
-  user: string;
+  @Type(() => UserResponseDto)
+  user: UserResponseDto;
 
   @Expose()
   role: EMemberRole;

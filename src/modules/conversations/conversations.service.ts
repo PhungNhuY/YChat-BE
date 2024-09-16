@@ -175,6 +175,72 @@ export class ConversationsService {
         },
       },
       { $unwind: '$lastMessage.user' },
+
+      // ---------- LOOKUP AN ARRAY OF OBJECTS --------- start
+      // lookup members
+      {
+        // convert string id to ObjectId
+        $addFields: {
+          'conversation.members': {
+            $map: {
+              input: '$conversation.members',
+              in: {
+                user: {
+                  $convert: {
+                    input: '$$this.user',
+                    to: 'objectId',
+                    onError: null,
+                  },
+                },
+                role: '$$this.role',
+              },
+            },
+          },
+        },
+      },
+      {
+        // conversation.members is an array of object
+        // we need to unwind it to lookup each member
+        $unwind: {
+          path: '$conversation.members',
+        },
+      },
+      {
+        // lookup user
+        $lookup: {
+          from: 'users',
+          localField: 'conversation.members.user',
+          foreignField: '_id',
+          as: 'conversation.members.user',
+        },
+      },
+      {
+        $unwind: {
+          path: '$conversation.members.user',
+        },
+      },
+      {
+        // after lookup, group by conversation id
+        $group: {
+          _id: '$_id',
+          conversation: { $first: '$conversation' },
+          lastMessage: { $first: '$lastMessage' },
+          members: {
+            $push: {
+              user: '$conversation.members.user',
+              role: '$conversation.members.role',
+            },
+          },
+        },
+      },
+      {
+        // move lookuped members back to conversation
+        $addFields: {
+          'conversation.members': '$members',
+        },
+      },
+      // ---------- LOOKUP AN ARRAY OF OBJECTS --------- end
+
       // move last message to conversation
       {
         $addFields: {
@@ -187,6 +253,7 @@ export class ConversationsService {
           lastMessage: 0,
           lastMessageAt: 0,
           _id: 0,
+          members: 0,
         },
       },
     ]);
