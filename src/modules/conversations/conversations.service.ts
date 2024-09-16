@@ -237,21 +237,19 @@ export class ConversationsService {
         // move lookuped members back to conversation
         $addFields: {
           'conversation.members': '$members',
+          'conversation.lastMessage': '$lastMessage', // By the way, we move lastMessage into conversation
         },
+      },
+      {
+        // unwind conversation.members to lookup each member and group them back
+        // we lost the order -> resort them
+        $sort: { 'conversation.lastMessage.created_at': -1 },
       },
       // ---------- LOOKUP AN ARRAY OF OBJECTS --------- end
-
-      // move last message to conversation
-      {
-        $addFields: {
-          'conversation.lastMessage': '$lastMessage',
-        },
-      },
       // remove no more needed fields
       {
         $project: {
           lastMessage: 0,
-          lastMessageAt: 0,
           _id: 0,
           members: 0,
         },
