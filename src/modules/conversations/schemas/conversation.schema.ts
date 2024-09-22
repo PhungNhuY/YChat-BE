@@ -34,7 +34,7 @@ export class Conversation extends BaseSchemaSoftDelete {
   name?: string;
 
   @Prop({
-    type: Array<Member>,
+    type: [Member],
     default: [],
   })
   members: Array<Member>;

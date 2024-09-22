@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Query, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ConversationsService } from './conversations.service';
 import { UseAuthData } from 'src/decorators/use-auth-data.decorator';
 import { CreateConversationDto } from './dtos/create-conversation.dto';
@@ -42,6 +50,20 @@ export class ConversationsController {
     );
     return buildSuccessResponse(
       transformArrayToResponse(data, ConversationResponseDto),
+    );
+  }
+
+  @Get(':conversationId')
+  async findOne(
+    @Param('conversationId') conversationId: string,
+    @UseAuthData() authData: AuthData,
+  ) {
+    const conversation = await this.conversationsService.findOne(
+      conversationId,
+      authData,
+    );
+    return buildSuccessResponse(
+      transformObjectToResponse(conversation, ConversationResponseDto),
     );
   }
 }

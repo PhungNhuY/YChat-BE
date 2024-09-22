@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateConversationDto } from './dtos/create-conversation.dto';
 import { Conversation, EConversationType } from './schemas/conversation.schema';
 import { User } from '@modules/users/schemas/user.schema';
@@ -80,8 +84,6 @@ export class ConversationsService {
     ]);
     return conversation;
   }
-
-  async findOne() {}
 
   async lastConversations(
     authData: AuthData,
@@ -261,6 +263,27 @@ export class ConversationsService {
       items: conversations,
       total: myConversationIds.length,
     };
+  }
+
+  async findOne(
+    conversationId: string,
+    authData: AuthData,
+  ): Promise<Conversation> {
+    const conversation = await this.conversationModel
+      .findOne({
+        deleted_at: null,
+        _id: conversationId,
+        members: {
+          $elemMatch: {
+            user: authData._id,
+          },
+        },
+      })
+      .populate('members.user')
+      .lean();
+    if (!conversation) throw new NotFoundException('Conversation not found');
+
+    return conversation;
   }
 
   async update() {}
