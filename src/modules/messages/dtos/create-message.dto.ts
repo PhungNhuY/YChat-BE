@@ -1,10 +1,4 @@
-import {
-  IsEnum,
-  IsMongoId,
-  IsString,
-  MaxLength,
-  MinLength,
-} from 'class-validator';
+import { IsEnum, IsString, MaxLength, MinLength } from 'class-validator';
 import { EMessageType } from '../schemas/message.schema';
 import { Transform } from 'class-transformer';
 import { standardizeString } from '@utils/string.util';
@@ -14,9 +8,6 @@ import {
 } from '@constants/message.constant';
 
 export class CreateMessageDto {
-  @IsMongoId()
-  conversation: string;
-
   @IsEnum(EMessageType)
   type: EMessageType;
 

@@ -16,12 +16,13 @@ export class MessagesService {
   ) {}
 
   async create(
+    conversationId: string,
     createMessageData: CreateMessageDto,
     authData: AuthData,
   ): Promise<NewMessageData> {
     const conversation = await this.conversationModel
       .findOne({
-        _id: createMessageData.conversation,
+        _id: conversationId,
         deleted_at: null,
         'members.user': authData._id,
       })
@@ -29,6 +30,7 @@ export class MessagesService {
     if (!conversation) throw new BadRequestException('Conversation not found');
 
     let message = await this.messageModel.create({
+      conversation: conversationId,
       user: authData._id,
       ...createMessageData,
     });

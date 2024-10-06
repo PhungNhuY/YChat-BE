@@ -21,7 +21,7 @@ import { ObjectIdValidationPipe } from 'src/pipes/objectid-validation.pipe';
 import { ApiQueryDto } from '@common/api-query.dto';
 import { MessageResponseDto } from './dtos/message-response.dto';
 
-@Controller('messages')
+@Controller('conversations/:conversationId/messages')
 @UseGuards(JwtAccessTokenGuard)
 export class MessagesController {
   constructor(
@@ -31,10 +31,13 @@ export class MessagesController {
 
   @Post()
   async create(
+    @Param('conversationId', new ObjectIdValidationPipe())
+    conversationId: string,
     @Body() createMessageData: CreateMessageDto,
     @UseAuthData() authData: AuthData,
   ) {
     const newMessageData = await this.messageService.create(
+      conversationId,
       createMessageData,
       authData,
     );
@@ -42,7 +45,7 @@ export class MessagesController {
     return buildSuccessResponse();
   }
 
-  @Get(':conversationId')
+  @Get()
   async findAll(
     @Param('conversationId', new ObjectIdValidationPipe())
     conversationId: string,
