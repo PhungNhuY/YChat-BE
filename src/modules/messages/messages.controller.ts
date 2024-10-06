@@ -18,7 +18,7 @@ import {
 } from '@utils/api-response-builder.util';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { ObjectIdValidationPipe } from 'src/pipes/objectid-validation.pipe';
-import { ApiQueryDto } from '@common/api-query.dto';
+import { MessageQueryDto } from './dtos/message-query.dto';
 import { MessageResponseDto } from './dtos/message-response.dto';
 
 @Controller('conversations/:conversationId/messages')
@@ -49,7 +49,7 @@ export class MessagesController {
   async findAll(
     @Param('conversationId', new ObjectIdValidationPipe())
     conversationId: string,
-    @Query() query: ApiQueryDto,
+    @Query() query: MessageQueryDto,
     @UseAuthData() authData: AuthData,
   ) {
     const messages = await this.messageService.findAll(

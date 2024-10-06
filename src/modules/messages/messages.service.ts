@@ -5,7 +5,7 @@ import { Model } from 'mongoose';
 import { CreateMessageDto } from './dtos/create-message.dto';
 import { AuthData, NewMessageData } from '@utils/types';
 import { Conversation } from '@modules/conversations/schemas/conversation.schema';
-import { ApiQueryDto } from '@common/api-query.dto';
+import { MessageQueryDto } from './dtos/message-query.dto';
 @Injectable()
 export class MessagesService {
   constructor(
@@ -46,7 +46,7 @@ export class MessagesService {
 
   async findAll(
     conversationId: string,
-    query: ApiQueryDto,
+    query: MessageQueryDto,
     authData: AuthData,
   ) {
     // check valid conversation id
@@ -63,16 +63,14 @@ export class MessagesService {
     if (!validConversation)
       throw new BadRequestException('Conversation not found');
 
-    const page = query.page || 1;
     const limit = query.limit || 10;
-    const skip = (page - 1) * limit;
     const messages = await this.messageModel
       .find({
         conversation: conversationId,
         deleted_at: null,
+        ...(query.before && { created_at: { $lte: query.before } }),
       })
       .sort({ created_at: -1 })
-      .skip(skip)
       .limit(limit)
       .lean();
     return messages;
