@@ -68,7 +68,7 @@ export class MessagesService {
       .find({
         conversation: conversationId,
         deleted_at: null,
-        ...(query.before && { created_at: { $lte: query.before } }),
+        ...(query.before && { created_at: { $lt: query.before } }),
       })
       .sort({ created_at: -1 })
       .limit(limit)
