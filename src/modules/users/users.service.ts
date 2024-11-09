@@ -7,6 +7,10 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
 import { FilterQuery, Model } from 'mongoose';
 import { RegisterDto } from '@modules/auth/dtos/register.dto';
+import { ApiQueryDto } from '@common/api-query.dto';
+import { AuthData } from '@utils/types';
+import { EUserStatus } from '@constants/user.constant';
+import { MultiItemsResponse } from '@utils/api-response-builder.util';
 
 @Injectable()
 export class UsersService {
@@ -39,6 +43,36 @@ export class UsersService {
       .select('+password')
       .lean();
     return user;
+  }
+
+  async find(
+    query: ApiQueryDto,
+    authData: AuthData,
+  ): Promise<MultiItemsResponse<User>> {
+    // build filter query
+    const filter: FilterQuery<User> = {
+      deletedAt: null,
+      status: EUserStatus.ACTIVE,
+    };
+    query?.q &&
+      Object.assign(filter, {
+        $or: [{ name: { $regex: query.q, $options: 'i' } }],
+      });
+
+    // build get users query
+    const itemsQuery = this.userModel.find(filter);
+    query?.page && itemsQuery.skip((query.page - 1) * query.limit);
+    query?.limit && itemsQuery.limit(query.limit);
+    // query?.sortBy && itemsQuery.sort(query.sortBy);
+    // query?.fields && itemsQuery.select(query.fields);
+    itemsQuery.lean();
+
+    // build get total of users query
+    const totalQuery = this.userModel.countDocuments(filter);
+
+    const [items, total] = await Promise.all([itemsQuery, totalQuery]);
+
+    return { items, total };
   }
 
   private async validate(data: Partial<RegisterDto>, userId: string | null) {
