@@ -107,4 +107,29 @@ export class AuthController {
 
     return buildSuccessResponse();
   }
+
+  @Get('logout')
+  async logout(@Res({ passthrough: true }) response: Response) {
+    // remove access token
+    response.cookie('access_token', null, {
+      httpOnly: true,
+      sameSite: 'strict',
+      path: '/',
+      maxAge: 0,
+      domain: this.configService.get<string>('DOMAIN'),
+      secure: this.configService.get<string>('NODE_EVN') === 'production',
+    });
+
+    // remove refresh token
+    response.cookie('refresh_token', null, {
+      httpOnly: true,
+      sameSite: 'strict',
+      path: '/api/auth/refresh',
+      maxAge: 0,
+      domain: this.configService.get<string>('DOMAIN'),
+      secure: this.configService.get<string>('NODE_EVN') === 'production',
+    });
+
+    return buildSuccessResponse();
+  }
 }
