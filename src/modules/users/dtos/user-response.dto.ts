@@ -6,9 +6,6 @@ export class UserResponseDto extends BaseResponseDto {
   name: string;
 
   @Expose()
-  email: string;
-
-  @Expose()
   DOB: Date;
 
   @Expose()
@@ -19,6 +16,9 @@ export class UserResponseDto extends BaseResponseDto {
 
   @Expose()
   status: number;
+
+  @Exclude()
+  email: string;
 
   @Exclude()
   password: string;
