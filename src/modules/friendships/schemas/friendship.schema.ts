@@ -1,9 +1,11 @@
 import { BaseSchemaSoftDelete } from '@common/base.schema';
-import { Prop, Schema } from '@nestjs/mongoose';
+import { MESSAGE_MAX_LENGTH } from '@constants/message.constant';
+import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 
 export enum EFriendshipStatus {
   REQUESTED = 1,
   ACCEPTED = 2,
+  DECLINED = 3,
 }
 
 @Schema({
@@ -38,7 +40,20 @@ export class Friendship extends BaseSchemaSoftDelete {
   status: EFriendshipStatus;
 
   @Prop({
+    type: String,
+    maxlength: MESSAGE_MAX_LENGTH,
+  })
+  message?: string;
+
+  @Prop({
     type: Number, // unix time
   })
   accepted_at?: number;
 }
+
+export const FriendshipSchema = SchemaFactory.createForClass(Friendship);
+
+FriendshipSchema.index(
+  { sender: 1, receiver: 1, deleted_at: 1 },
+  { unique: true },
+);

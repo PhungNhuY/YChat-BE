@@ -36,6 +36,11 @@ export class User extends BaseSchemaSoftDelete {
   })
   password: string;
 
+  @Prop({
+    type: String,
+  })
+  customId?: string;
+
   @Prop()
   avatar?: string;
 
@@ -77,6 +82,9 @@ export class User extends BaseSchemaSoftDelete {
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
+
+// unique email
+UserSchema.index({ email: 1, deleted_at: 1 }, { unique: true });
 
 export const UserSchemaFactory = () => {
   const user_schema = UserSchema;

@@ -11,6 +11,7 @@ import { ConversationsModule } from './modules/conversations/conversations.modul
 import { MessagesModule } from './modules/messages/messages.module';
 import { WebsocketModule } from './modules/websocket/websocket.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { FriendshipsModule } from './modules/friendships/friendships.module';
 
 @Module({
   imports: [
@@ -36,6 +37,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
     ConversationsModule,
     MessagesModule,
     WebsocketModule,
+    FriendshipsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
