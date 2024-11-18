@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Friendship } from './schemas/friendship.schema';
+import { EFriendshipStatus, Friendship } from './schemas/friendship.schema';
 import { Model } from 'mongoose';
 import { AuthData } from '@utils/types';
 import { CreateRequestDto } from './dtos/create-request.dto';
@@ -28,5 +28,24 @@ export class FriendshipsService {
       receiver: createRequestData.receiver,
       messages: createRequestData.messages,
     });
+  }
+
+  async changeRequestStatus(
+    authData: AuthData,
+    friendshipId: string,
+    status: EFriendshipStatus,
+  ) {
+    // find requested friendship
+    const friendship = await this.friendshipModel.findOne({
+      deleted_at: null,
+      _id: friendshipId,
+      receiver: authData._id,
+      status: EFriendshipStatus.REQUESTED,
+    });
+    if (!friendship) throw new BadRequestException('Friendship not found');
+
+    // change status
+    friendship.status = status;
+    await friendship.save();
   }
 }
