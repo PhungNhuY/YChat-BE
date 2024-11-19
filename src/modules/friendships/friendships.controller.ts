@@ -11,14 +11,52 @@ import { AuthData } from '@utils/types';
 import { UseAuthData } from 'src/decorators/use-auth-data.decorator';
 import { CreateRequestDto } from './dtos/create-request.dto';
 import { FriendshipsService } from './friendships.service';
-import { buildSuccessResponse } from '@utils/api-response-builder.util';
+import {
+  buildSuccessResponse,
+  transformArrayToResponse,
+} from '@utils/api-response-builder.util';
 import { changeRequestStatusDto } from './dtos/change-request-status.dto';
+import { ApiQueryDto } from '@common/api-query.dto';
+import { FriendshipResponseDto } from './dtos/friendship-response.dto';
 
 @Controller('friendships')
 export class FriendshipsController {
   constructor(private readonly friendshipsService: FriendshipsService) {}
   @Get()
-  findAll(@UseAuthData() authData: AuthData) {}
+  async getFriends(
+    @UseAuthData() authData: AuthData,
+    @Query() query: ApiQueryDto,
+  ) {
+    const data = await this.friendshipsService.getFriends(authData, query);
+    return buildSuccessResponse(
+      transformArrayToResponse(data, FriendshipResponseDto),
+    );
+  }
+
+  @Get('requests/send')
+  async getSendRequests(
+    @UseAuthData() authData: AuthData,
+    @Query() query: ApiQueryDto,
+  ) {
+    const data = await this.friendshipsService.getSendRequests(authData, query);
+    return buildSuccessResponse(
+      transformArrayToResponse(data, FriendshipResponseDto),
+    );
+  }
+
+  @Get('requests/received')
+  async getReceivedRequests(
+    @UseAuthData() authData: AuthData,
+    @Query() query: ApiQueryDto,
+  ) {
+    const data = await this.friendshipsService.getReceivedRequests(
+      authData,
+      query,
+    );
+    return buildSuccessResponse(
+      transformArrayToResponse(data, FriendshipResponseDto),
+    );
+  }
 
   @Post()
   async createRequest(

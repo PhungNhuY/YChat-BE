@@ -1,10 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { EFriendshipStatus, Friendship } from './schemas/friendship.schema';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 import { AuthData } from '@utils/types';
 import { CreateRequestDto } from './dtos/create-request.dto';
 import { User } from '@modules/users/schemas/user.schema';
+import { ApiQueryDto } from '@common/api-query.dto';
+import { MultiItemsResponse } from '@utils/api-response-builder.util';
 
 @Injectable()
 export class FriendshipsService {
@@ -14,6 +16,102 @@ export class FriendshipsService {
     @InjectModel(User.name)
     private readonly userModel: Model<User>,
   ) {}
+
+  async getFriends(
+    authData: AuthData,
+    query: ApiQueryDto,
+  ): Promise<MultiItemsResponse<Friendship>> {
+    // build filter query
+    const filter: FilterQuery<Friendship> = {
+      deleted_at: null,
+      status: EFriendshipStatus.ACCEPTED,
+      $or: [{ sender: authData._id }, { receiver: authData._id }],
+    };
+
+    // build get friendship query
+    const itemsQuery = this.friendshipModel.find(filter);
+    query?.page && itemsQuery.skip((query.page - 1) * query.limit);
+    query?.limit && itemsQuery.limit(query.limit);
+    itemsQuery
+      .populate({
+        path: 'sender',
+        match: { deleted_at: null },
+        select: 'name avatar customId',
+      })
+      .populate({
+        path: 'receiver',
+        match: { deleted_at: null },
+        select: 'name avatar customId',
+      });
+    itemsQuery.lean();
+
+    // build get total of friendship query
+    const totalQuery = this.friendshipModel.countDocuments(filter);
+
+    const [items, total] = await Promise.all([itemsQuery, totalQuery]);
+
+    return { items, total };
+  }
+
+  async getSendRequests(
+    authData: AuthData,
+    query: ApiQueryDto,
+  ): Promise<MultiItemsResponse<Friendship>> {
+    // build filter query
+    const filter: FilterQuery<Friendship> = {
+      deleted_at: null,
+      status: EFriendshipStatus.REQUESTED,
+      sender: authData._id,
+    };
+
+    // build get send-requests query
+    const itemsQuery = this.friendshipModel.find(filter);
+    query?.page && itemsQuery.skip((query.page - 1) * query.limit);
+    query?.limit && itemsQuery.limit(query.limit);
+    itemsQuery.populate({
+      path: 'sender',
+      match: { deleted_at: null },
+      select: 'name avatar customId',
+    });
+    itemsQuery.lean();
+
+    // build get total of send-requests query
+    const totalQuery = this.friendshipModel.countDocuments(filter);
+
+    const [items, total] = await Promise.all([itemsQuery, totalQuery]);
+
+    return { items, total };
+  }
+
+  async getReceivedRequests(
+    authData: AuthData,
+    query: ApiQueryDto,
+  ): Promise<MultiItemsResponse<Friendship>> {
+    // build filter query
+    const filter: FilterQuery<Friendship> = {
+      deleted_at: null,
+      status: EFriendshipStatus.REQUESTED,
+      receiver: authData._id,
+    };
+
+    // build get received-requests query
+    const itemsQuery = this.friendshipModel.find(filter);
+    query?.page && itemsQuery.skip((query.page - 1) * query.limit);
+    query?.limit && itemsQuery.limit(query.limit);
+    itemsQuery.populate({
+      path: 'receiver',
+      match: { deleted_at: null },
+      select: 'name avatar customId',
+    });
+    itemsQuery.lean();
+
+    // build get total of received-requests query
+    const totalQuery = this.friendshipModel.countDocuments(filter);
+
+    const [items, total] = await Promise.all([itemsQuery, totalQuery]);
+
+    return { items, total };
+  }
 
   async createRequest(authData: AuthData, createRequestData: CreateRequestDto) {
     // validate receiver

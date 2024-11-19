@@ -48,7 +48,7 @@ export class Friendship extends BaseSchemaSoftDelete {
   @Prop({
     type: Number, // unix time
   })
-  accepted_at?: number;
+  acceptedAt?: number;
 }
 
 export const FriendshipSchema = SchemaFactory.createForClass(Friendship);
