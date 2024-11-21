@@ -121,6 +121,17 @@ export class FriendshipsService {
     });
     if (!validReceiver) throw new BadRequestException('Receiver not found');
 
+    // check friendship status
+    const validFriendship = await this.friendshipModel.exists({
+      deleted_at: null,
+      $or: [
+        { sender: authData._id, receiver: createRequestData.receiver },
+        { sender: createRequestData.receiver, receiver: authData._id },
+      ],
+    });
+    if (validFriendship)
+      throw new BadRequestException('Request has been duplicated');
+
     await this.friendshipModel.create({
       sender: authData._id,
       receiver: createRequestData.receiver,

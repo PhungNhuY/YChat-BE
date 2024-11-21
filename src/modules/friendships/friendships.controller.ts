@@ -6,6 +6,7 @@ import {
   Patch,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthData } from '@utils/types';
 import { UseAuthData } from 'src/decorators/use-auth-data.decorator';
@@ -18,8 +19,10 @@ import {
 import { changeRequestStatusDto } from './dtos/change-request-status.dto';
 import { ApiQueryDto } from '@common/api-query.dto';
 import { FriendshipResponseDto } from './dtos/friendship-response.dto';
+import { JwtAccessTokenGuard } from 'src/guards/jwt-access-token.guard';
 
 @Controller('friendships')
+@UseGuards(JwtAccessTokenGuard)
 export class FriendshipsController {
   constructor(private readonly friendshipsService: FriendshipsService) {}
   @Get()
