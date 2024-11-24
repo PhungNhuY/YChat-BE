@@ -69,7 +69,7 @@ export class FriendshipsService {
     query?.page && itemsQuery.skip((query.page - 1) * query.limit);
     query?.limit && itemsQuery.limit(query.limit);
     itemsQuery.populate({
-      path: 'sender',
+      path: 'receiver',
       match: { deleted_at: null },
       select: 'name avatar customId',
     });
@@ -99,7 +99,7 @@ export class FriendshipsService {
     query?.page && itemsQuery.skip((query.page - 1) * query.limit);
     query?.limit && itemsQuery.limit(query.limit);
     itemsQuery.populate({
-      path: 'receiver',
+      path: 'sender',
       match: { deleted_at: null },
       select: 'name avatar customId',
     });
