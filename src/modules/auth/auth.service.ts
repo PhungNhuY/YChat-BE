@@ -118,8 +118,12 @@ export class AuthService {
   }
 
   async refresh(authData: AuthData): Promise<RefreshResponseDto> {
+    const payload: AuthData = {
+      _id: authData._id,
+      status: authData.status,
+    };
     const access_token = this.generateToken(
-      authData,
+      payload,
       access_token_private_key,
       this.configService.get<number>('ACCESS_TOKEN_EXPIRATION_TIME'),
     );

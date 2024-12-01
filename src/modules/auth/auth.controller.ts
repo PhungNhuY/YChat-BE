@@ -67,7 +67,7 @@ export class AuthController {
     response.cookie('refresh_token', res.refresh_token, {
       httpOnly: true,
       sameSite: 'strict',
-      path: '/api/auth/refresh',
+      path: '/auth/refresh',
       maxAge:
         this.configService.get<number>('REFRESH_TOKEN_EXPIRATION_TIME') * 1000,
       domain: this.configService.get<string>('DOMAIN'),
