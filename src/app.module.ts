@@ -12,6 +12,7 @@ import { MessagesModule } from './modules/messages/messages.module';
 import { WebsocketModule } from './modules/websocket/websocket.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { FriendshipsModule } from './modules/friendships/friendships.module';
+import { DevModule } from './modules/dev/dev.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { FriendshipsModule } from './modules/friendships/friendships.module';
     MessagesModule,
     WebsocketModule,
     FriendshipsModule,
+    ...(process.env.NODE_ENV === 'development' ? [DevModule] : []),
   ],
   controllers: [AppController],
   providers: [AppService],
