@@ -57,8 +57,10 @@ export class AuthController {
       httpOnly: true,
       sameSite: 'strict',
       path: '/',
-      maxAge:
-        this.configService.get<number>('ACCESS_TOKEN_EXPIRATION_TIME') * 1000,
+      ...(!!loginData.remember && {
+        maxAge:
+          this.configService.get<number>('ACCESS_TOKEN_EXPIRATION_TIME') * 1000,
+      }),
       domain: this.configService.get<string>('DOMAIN'),
       secure: this.configService.get<string>('NODE_EVN') === 'production',
     });
@@ -68,8 +70,11 @@ export class AuthController {
       httpOnly: true,
       sameSite: 'strict',
       path: '/auth/refresh',
-      maxAge:
-        this.configService.get<number>('REFRESH_TOKEN_EXPIRATION_TIME') * 1000,
+      ...(!!loginData.remember && {
+        maxAge:
+          this.configService.get<number>('REFRESH_TOKEN_EXPIRATION_TIME') *
+          1000,
+      }),
       domain: this.configService.get<string>('DOMAIN'),
       secure: this.configService.get<string>('NODE_EVN') === 'production',
     });

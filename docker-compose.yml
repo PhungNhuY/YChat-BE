@@ -6,19 +6,26 @@ services:
     ports:
       - $MONGODB_PORT:27017
     environment:
-      - ROOT_USERNAME=$MONGODB_USER
-      - ROOT_PASSWORD=$MONGODB_PASSWORD
+      MONGO_INITDB_ROOT_USERNAME: $MONGO_INITDB_ROOT_USERNAME
+      MONGO_INITDB_ROOT_PASSWORD: $MONGO_INITDB_ROOT_PASSWORD
     volumes:
       - $MONGODB_VOLUME_PATH:/data/db
     networks:
       - y-chat-network
+    healthcheck:
+      test: /docker-entrypoint-initdb.d/mongo-init.sh
+      start_period: 10s
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
   app:
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
     container_name: y-chat-be
     restart: on-failure:1
-    build: 
+    build:
       context: .
       dockerfile: ./docker/app/dockerfile
     ports:
