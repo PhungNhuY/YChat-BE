@@ -96,6 +96,7 @@ export class FriendshipsService {
 
     // build get received-requests query
     const itemsQuery = this.friendshipModel.find(filter);
+    itemsQuery.sort({ _id: -1 });
     query?.page && itemsQuery.skip((query.page - 1) * query.limit);
     query?.limit && itemsQuery.limit(query.limit);
     itemsQuery.populate({
