@@ -1,11 +1,13 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { Message } from './schemas/message.schema';
-import { Model } from 'mongoose';
+import { ClientSession, Connection, HydratedDocument, Model } from 'mongoose';
 import { CreateMessageDto } from './dtos/create-message.dto';
 import { AuthData, NewMessageData } from '@utils/types';
 import { Conversation } from '@modules/conversations/schemas/conversation.schema';
 import { MessageQueryDto } from './dtos/message-query.dto';
+import { LastMessage } from './schemas/last-message.schema';
+import { mongooseTransaction } from '@common/mongoose-transaction';
 @Injectable()
 export class MessagesService {
   constructor(
@@ -13,6 +15,10 @@ export class MessagesService {
     private readonly messageModel: Model<Message>,
     @InjectModel(Conversation.name)
     private readonly conversationModel: Model<Conversation>,
+    @InjectModel(LastMessage.name)
+    private readonly lastMessageModel: Model<LastMessage>,
+    @InjectConnection()
+    private readonly connection: Connection,
   ) {}
 
   async create(
@@ -29,17 +35,35 @@ export class MessagesService {
       .lean();
     if (!conversation) throw new BadRequestException('Conversation not found');
 
-    let message = await this.messageModel.create({
-      conversation: conversationId,
-      user: authData._id,
-      ...createMessageData,
-    });
+    const message = await mongooseTransaction<HydratedDocument<Message>>(
+      this.connection,
+      async (session: ClientSession) => {
+        // ------ START TRANSACTION
+        // create message
+        let [message] = await this.messageModel.create(
+          {
+            conversation: conversationId,
+            user: authData._id,
+            ...createMessageData,
+          },
+          {
+            session,
+          },
+        );
 
-    message = await message.populate({
-      path: 'user',
-      match: { deleted_at: null },
-      select: 'name avatar',
-    });
+        // update last message
+        await this.writeLastMessage(message, session);
+
+        // populate user
+        message = await message.populate({
+          path: 'user',
+          match: { deleted_at: null },
+          select: 'name avatar',
+        });
+        return message;
+        // ------ END TRANSACTION
+      },
+    );
 
     return { message: message.toObject(), conversation };
   }
@@ -74,5 +98,20 @@ export class MessagesService {
       .limit(limit)
       .lean();
     return messages;
+  }
+
+  async writeLastMessage(message: Message, session: ClientSession) {
+    await this.lastMessageModel.findOneAndUpdate(
+      {
+        conversation: message.conversation.toString(),
+      },
+      {
+        message: message._id.toString(),
+      },
+      {
+        upsert: true,
+        session,
+      },
+    );
   }
 }

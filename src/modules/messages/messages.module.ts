@@ -7,6 +7,7 @@ import {
   Conversation,
   ConversationSchema,
 } from '@modules/conversations/schemas/conversation.schema';
+import { LastMessage, LastMessageSchema } from './schemas/last-message.schema';
 
 @Module({
   imports: [
@@ -18,6 +19,10 @@ import {
       {
         name: Conversation.name,
         schema: ConversationSchema,
+      },
+      {
+        name: LastMessage.name,
+        schema: LastMessageSchema,
       },
     ]),
   ],
