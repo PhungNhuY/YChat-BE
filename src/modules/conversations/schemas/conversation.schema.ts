@@ -1,6 +1,7 @@
 import { BaseSchemaSoftDelete } from '@common/base.schema';
 import { Member } from './member.schema';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Message } from '@modules/messages/schemas/message.schema';
 
 export enum EConversationType {
   ONE_TO_ONE = 1,
@@ -48,6 +49,8 @@ export class Conversation extends BaseSchemaSoftDelete {
     type: String,
   })
   avatar?: string;
+
+  lastMessage?: Message;
 }
 
 export const ConversationSchema = SchemaFactory.createForClass(Conversation);

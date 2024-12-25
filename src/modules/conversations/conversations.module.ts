@@ -11,6 +11,10 @@ import {
   Message,
   MessageSchema,
 } from '@modules/messages/schemas/message.schema';
+import {
+  LastMessage,
+  LastMessageSchema,
+} from '@modules/messages/schemas/last-message.schema';
 
 @Module({
   imports: [
@@ -26,6 +30,10 @@ import {
       {
         name: Message.name,
         schema: MessageSchema,
+      },
+      {
+        name: LastMessage.name,
+        schema: LastMessageSchema,
       },
     ]),
   ],

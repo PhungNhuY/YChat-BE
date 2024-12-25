@@ -13,6 +13,7 @@ import { ApiQueryDto } from '@common/api-query.dto';
 import { MultiItemsResponse } from '@utils/api-response-builder.util';
 import { Message } from '@modules/messages/schemas/message.schema';
 import { EMemberRole, Member } from './schemas/member.schema';
+import { LastMessage } from '@modules/messages/schemas/last-message.schema';
 
 @Injectable()
 export class ConversationsService {
@@ -25,6 +26,8 @@ export class ConversationsService {
     private readonly userModel: Model<User>,
     @InjectModel(Message.name)
     private readonly messageModel: Model<Message>,
+    @InjectModel(LastMessage.name)
+    private readonly lastMessageModel: Model<LastMessage>,
   ) {}
 
   async createConversation(
@@ -106,163 +109,194 @@ export class ConversationsService {
         .distinct('_id')
     ).map((id) => id.toString());
 
-    // get conversations by last message
-    let conversations = await this.messageModel.aggregate([
-      {
-        $match: {
-          deleted_at: null,
-          conversation: { $in: myConversationIds },
-        },
-      },
-      // group by conversation and find max created_at with each conversation
-      // push all messages to records
-      {
-        $group: {
-          _id: '$conversation',
-          lastMessageAt: { $max: '$created_at' },
-          records: { $push: '$$ROOT' },
-        },
-      },
-      // sort records desc by lastMessageAt
-      {
-        $sort: { lastMessageAt: -1 },
-      },
-      {
-        $project: {
-          // filter records by lastMessageAt -> last message
-          lastMessage: {
-            $filter: {
-              input: '$records',
-              cond: {
-                $eq: ['$$this.created_at', '$lastMessageAt'],
-              },
-              limit: 1,
-            },
-          },
-          // convert id to ObjectId
-          conversation: { $toObjectId: '$_id' },
-        },
-      },
-      // change last message from array to object
-      {
-        $addFields: {
-          lastMessage: { $arrayElemAt: ['$lastMessage', 0] },
-        },
-      },
-      // pagination
-      { $skip: skip },
-      { $limit: limit },
-      // lookup conversation
-      {
-        $lookup: {
-          from: 'conversations',
-          localField: 'conversation',
-          foreignField: '_id',
-          as: 'conversation',
-        },
-      },
-      { $unwind: '$conversation' },
-      // lookup last message user
-      {
-        $set: {
-          'lastMessage.user': { $toObjectId: '$lastMessage.user' },
-        },
-      },
-      {
-        $lookup: {
-          from: 'users',
-          localField: 'lastMessage.user',
-          foreignField: '_id',
-          as: 'lastMessage.user',
-        },
-      },
-      { $unwind: '$lastMessage.user' },
+    // get lastMessage
+    const lastMessage = await this.lastMessageModel
+      .find({
+        conversation: { $in: myConversationIds },
+      })
+      .sort({ updated_at: -1 })
+      .skip(skip)
+      .limit(limit)
+      .populate({
+        path: 'conversation',
+        match: { deleted_at: null },
+      })
+      .populate({
+        path: 'message',
+        match: { deleted_at: null },
+      })
+      .lean();
 
-      // ---------- LOOKUP AN ARRAY OF OBJECTS --------- start
-      // lookup members
-      {
-        // convert string id to ObjectId
-        $addFields: {
-          'conversation.members': {
-            $map: {
-              input: '$conversation.members',
-              in: {
-                user: {
-                  $convert: {
-                    input: '$$this.user',
-                    to: 'objectId',
-                    onError: null,
-                  },
-                },
-                role: '$$this.role',
-              },
-            },
-          },
-        },
-      },
-      {
-        // conversation.members is an array of object
-        // we need to unwind it to lookup each member
-        $unwind: {
-          path: '$conversation.members',
-        },
-      },
-      {
-        // lookup user
-        $lookup: {
-          from: 'users',
-          localField: 'conversation.members.user',
-          foreignField: '_id',
-          as: 'conversation.members.user',
-        },
-      },
-      {
-        $unwind: {
-          path: '$conversation.members.user',
-        },
-      },
-      {
-        // after lookup, group by conversation id
-        $group: {
-          _id: '$_id',
-          conversation: { $first: '$conversation' },
-          lastMessage: { $first: '$lastMessage' },
-          members: {
-            $push: {
-              user: '$conversation.members.user',
-              role: '$conversation.members.role',
-            },
-          },
-        },
-      },
-      {
-        // move lookuped members back to conversation
-        $addFields: {
-          'conversation.members': '$members',
-          'conversation.lastMessage': '$lastMessage', // By the way, we move lastMessage into conversation
-        },
-      },
-      {
-        // unwind conversation.members to lookup each member and group them back
-        // we lost the order -> resort them
-        $sort: { 'conversation.lastMessage.created_at': -1 },
-      },
-      // ---------- LOOKUP AN ARRAY OF OBJECTS --------- end
-      // remove no more needed fields
-      {
-        $project: {
-          lastMessage: 0,
-          _id: 0,
-          members: 0,
-        },
-      },
-    ]);
-    conversations = conversations.map((c) => c.conversation);
+    const conversations = [];
+    for (const lm of lastMessage) {
+      if (!lm.conversation) continue;
+      const conversation = lm.conversation as unknown as Conversation;
+      conversation.lastMessage = lm.message as unknown as Message;
+      conversations.push(conversation);
+    }
 
     return {
-      items: conversations,
-      total: myConversationIds.length,
+      items: [],
+      total: 0,
     };
+
+    // get conversations by last message
+    // let conversations = await this.messageModel.aggregate([
+    //   {
+    //     $match: {
+    //       deleted_at: null,
+    //       conversation: { $in: myConversationIds },
+    //     },
+    //   },
+    //   // group by conversation and find max created_at with each conversation
+    //   // push all messages to records
+    //   {
+    //     $group: {
+    //       _id: '$conversation',
+    //       lastMessageAt: { $max: '$created_at' },
+    //       records: { $push: '$$ROOT' },
+    //     },
+    //   },
+    //   // sort records desc by lastMessageAt
+    //   {
+    //     $sort: { lastMessageAt: -1 },
+    //   },
+    //   {
+    //     $project: {
+    //       // filter records by lastMessageAt -> last message
+    //       lastMessage: {
+    //         $filter: {
+    //           input: '$records',
+    //           cond: {
+    //             $eq: ['$$this.created_at', '$lastMessageAt'],
+    //           },
+    //           limit: 1,
+    //         },
+    //       },
+    //       // convert id to ObjectId
+    //       conversation: { $toObjectId: '$_id' },
+    //     },
+    //   },
+    //   // change last message from array to object
+    //   {
+    //     $addFields: {
+    //       lastMessage: { $arrayElemAt: ['$lastMessage', 0] },
+    //     },
+    //   },
+    //   // pagination
+    //   { $skip: skip },
+    //   { $limit: limit },
+    //   // lookup conversation
+    //   {
+    //     $lookup: {
+    //       from: 'conversations',
+    //       localField: 'conversation',
+    //       foreignField: '_id',
+    //       as: 'conversation',
+    //     },
+    //   },
+    //   { $unwind: '$conversation' },
+    //   // lookup last message user
+    //   {
+    //     $set: {
+    //       'lastMessage.user': { $toObjectId: '$lastMessage.user' },
+    //     },
+    //   },
+    //   {
+    //     $lookup: {
+    //       from: 'users',
+    //       localField: 'lastMessage.user',
+    //       foreignField: '_id',
+    //       as: 'lastMessage.user',
+    //     },
+    //   },
+    //   { $unwind: '$lastMessage.user' },
+
+    //   // ---------- LOOKUP AN ARRAY OF OBJECTS --------- start
+    //   // lookup members
+    //   {
+    //     // convert string id to ObjectId
+    //     $addFields: {
+    //       'conversation.members': {
+    //         $map: {
+    //           input: '$conversation.members',
+    //           in: {
+    //             user: {
+    //               $convert: {
+    //                 input: '$$this.user',
+    //                 to: 'objectId',
+    //                 onError: null,
+    //               },
+    //             },
+    //             role: '$$this.role',
+    //           },
+    //         },
+    //       },
+    //     },
+    //   },
+    //   {
+    //     // conversation.members is an array of object
+    //     // we need to unwind it to lookup each member
+    //     $unwind: {
+    //       path: '$conversation.members',
+    //     },
+    //   },
+    //   {
+    //     // lookup user
+    //     $lookup: {
+    //       from: 'users',
+    //       localField: 'conversation.members.user',
+    //       foreignField: '_id',
+    //       as: 'conversation.members.user',
+    //     },
+    //   },
+    //   {
+    //     $unwind: {
+    //       path: '$conversation.members.user',
+    //     },
+    //   },
+    //   {
+    //     // after lookup, group by conversation id
+    //     $group: {
+    //       _id: '$_id',
+    //       conversation: { $first: '$conversation' },
+    //       lastMessage: { $first: '$lastMessage' },
+    //       members: {
+    //         $push: {
+    //           user: '$conversation.members.user',
+    //           role: '$conversation.members.role',
+    //         },
+    //       },
+    //     },
+    //   },
+    //   {
+    //     // move lookuped members back to conversation
+    //     $addFields: {
+    //       'conversation.members': '$members',
+    //       'conversation.lastMessage': '$lastMessage', // By the way, we move lastMessage into conversation
+    //     },
+    //   },
+    //   {
+    //     // unwind conversation.members to lookup each member and group them back
+    //     // we lost the order -> resort them
+    //     $sort: { 'conversation.lastMessage.created_at': -1 },
+    //   },
+    //   // ---------- LOOKUP AN ARRAY OF OBJECTS --------- end
+    //   // remove no more needed fields
+    //   {
+    //     $project: {
+    //       lastMessage: 0,
+    //       _id: 0,
+    //       members: 0,
+    //     },
+    //   },
+    // ]);
+    // conversations = conversations.map((c) => c.conversation);
+
+    // return {
+    //   items: conversations,
+    //   total: myConversationIds.length,
+    // };
   }
 
   async findOne(
