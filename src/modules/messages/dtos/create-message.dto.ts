@@ -1,4 +1,4 @@
-import { IsEnum, IsString, MaxLength, MinLength } from 'class-validator';
+import { IsIn, IsString, MaxLength, MinLength } from 'class-validator';
 import { EMessageType } from '../schemas/message.schema';
 import { Transform } from 'class-transformer';
 import { standardizeString } from '@utils/string.util';
@@ -8,7 +8,7 @@ import {
 } from '@constants/message.constant';
 
 export class CreateMessageDto {
-  @IsEnum(EMessageType)
+  @IsIn([EMessageType.TEXT, EMessageType.FIlE])
   type: EMessageType;
 
   @IsString()

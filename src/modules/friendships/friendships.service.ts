@@ -1,12 +1,23 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { EFriendshipStatus, Friendship } from './schemas/friendship.schema';
-import { FilterQuery, Model } from 'mongoose';
+import { ClientSession, Connection, FilterQuery, Model } from 'mongoose';
 import { AuthData } from '@utils/types';
 import { CreateRequestDto } from './dtos/create-request.dto';
 import { User } from '@modules/users/schemas/user.schema';
 import { ApiQueryDto } from '@common/api-query.dto';
 import { MultiItemsResponse } from '@utils/api-response-builder.util';
+import { mongooseTransaction } from '@common/mongoose-transaction';
+import {
+  Conversation,
+  EConversationType,
+} from '@modules/conversations/schemas/conversation.schema';
+import {
+  EMessageType,
+  Message,
+} from '@modules/messages/schemas/message.schema';
+import { SYSTEM_NOTIFICATION_MESSAGE } from '@constants/message.constant';
+import { EMemberRole } from '@modules/conversations/schemas/member.schema';
 
 @Injectable()
 export class FriendshipsService {
@@ -15,6 +26,12 @@ export class FriendshipsService {
     private readonly friendshipModel: Model<Friendship>,
     @InjectModel(User.name)
     private readonly userModel: Model<User>,
+    @InjectModel(Conversation.name)
+    private readonly conversationModel: Model<Conversation>,
+    @InjectModel(Message.name)
+    private readonly messageModel: Model<Message>,
+    @InjectConnection()
+    private readonly connection: Connection,
   ) {}
 
   async getFriends(
@@ -154,8 +171,63 @@ export class FriendshipsService {
     });
     if (!friendship) throw new BadRequestException('Friendship not found');
 
-    // change status
-    friendship.status = status;
-    await friendship.save();
+    await mongooseTransaction(
+      this.connection,
+      async (session: ClientSession) => {
+        // ------ START TRANSACTION
+        // change status
+        friendship.status = status;
+        await friendship.save({ session });
+
+        // create and send notification after request is accepted
+        if (status === EFriendshipStatus.ACCEPTED) {
+          // check conversation exists
+          let conversation = await this.conversationModel.exists({
+            deleted_at: null,
+            type: EConversationType.ONE_TO_ONE,
+            members: {
+              $size: 2,
+            },
+            'members.user': {
+              $all: [friendship.sender, friendship.receiver],
+            },
+          });
+
+          // create conversation if not exists
+          if (!conversation) {
+            [conversation] = await this.conversationModel.create(
+              [
+                {
+                  type: EConversationType.ONE_TO_ONE,
+                  members: [
+                    { user: friendship.sender, role: EMemberRole.MEMBER },
+                    { user: friendship.receiver, role: EMemberRole.MEMBER },
+                  ],
+                },
+              ],
+              {
+                session,
+              },
+            );
+          }
+
+          // send notification to conversation
+          await this.messageModel.create(
+            [
+              {
+                system: true,
+                conversation: conversation._id.toString(),
+                type: EMessageType.NOTIFICATION,
+                content: SYSTEM_NOTIFICATION_MESSAGE.BE_FRIEND,
+              },
+            ],
+            {
+              session,
+            },
+          );
+        }
+        // ------ END TRANSACTION
+      },
+    );
   }
 }

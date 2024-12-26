@@ -8,6 +8,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 export enum EMessageType {
   TEXT = 1,
   FIlE = 2,
+  NOTIFICATION = 3,
 }
 
 @Schema({
@@ -21,11 +22,15 @@ export enum EMessageType {
 export class Message extends BaseSchemaSoftDelete {
   // from
   @Prop({
-    required: true,
     type: String,
     ref: 'User',
   })
-  user: string;
+  user?: string;
+
+  @Prop({
+    type: Boolean,
+  })
+  system?: boolean;
 
   // to
   @Prop({
