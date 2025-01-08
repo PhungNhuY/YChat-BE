@@ -6,8 +6,8 @@ const validationSchema = Joi.object({
 
   MONGODB_HOST: Joi.string().required(),
   MONGODB_PORT: Joi.number().required(),
-  MONGODB_USER: Joi.string().required(),
-  MONGODB_PASSWORD: Joi.string().required(),
+  MONGO_INITDB_ROOT_USERNAME: Joi.string().required(),
+  MONGO_INITDB_ROOT_PASSWORD: Joi.string().required(),
   MONGODB_DBNAME: Joi.string().required(),
   MONGODB_REPLICASET_NAME: Joi.string().required(),
 
