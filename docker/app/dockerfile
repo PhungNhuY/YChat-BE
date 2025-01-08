@@ -1,33 +1,22 @@
 ####################
-# dev
-####################
-FROM node:20.11.0-alpine as dev
-
-# create app dir
-WORKDIR /app
-
-# Set to dev environment
-ENV NODE_ENV development
-
-# Copy source code into app folder
-COPY ../ .
-
-# Install dependencies
-RUN yarn --frozen-lockfile
-
-####################
 # build
 ####################
-FROM node:20.11.0-alpine as build
+FROM node:20.11.0-alpine AS build
 
-# create app dir
-WORKDIR /app
+ENV NODE_ENV=build
 
-# In order to run `yarn build` we need access to the Nest CLI.
-# Nest CLI is a dev dependency.
-COPY --from=dev /app/node_modules ./node_modules
+USER node
+WORKDIR /home/node
+
+# copy package.json and yarn.lock
+COPY --chown=node:node package.json ./
+COPY --chown=node:node yarn.lock ./
+
+# Install all dependencies to build
+RUN yarn --frozen-lockfile
+
 # Copy source code
-COPY ../../ .
+COPY --chown=node:node ../../ .
 
 # Generate the production build.
 RUN yarn build
@@ -38,17 +27,18 @@ RUN yarn --frozen-lockfile --production && yarn cache clean
 ####################
 # production 
 ####################
-FROM node:20.11.0-alpine as prod
-
-# create app dir
-WORKDIR /app
+FROM node:20.11.0-alpine AS prod
 
 # Set to production environment
-ENV NODE_ENV production
+ENV NODE_ENV=production
+
+USER node
+WORKDIR /home/node
+
 
 # Copy only the necessary files
-COPY --from=build /app/dist dist
-COPY --from=build /app/node_modules node_modules
+COPY --chown=node:node --from=build /home/node/dist dist
+COPY --chown=node:node --from=build /home/node/node_modules node_modules
 
 # Start the server using the production build
 CMD [ "node", "dist/main.js" ]
