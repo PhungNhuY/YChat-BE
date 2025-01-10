@@ -4,12 +4,8 @@ const validationSchema = Joi.object({
   PORT: Joi.number().required(),
   NODE_ENV: Joi.string().required().valid('development', 'production'),
 
-  MONGODB_HOST: Joi.string().required(),
-  MONGODB_PORT: Joi.number().required(),
-  MONGO_INITDB_ROOT_USERNAME: Joi.string().required(),
-  MONGO_INITDB_ROOT_PASSWORD: Joi.string().required(),
   MONGODB_DBNAME: Joi.string().required(),
-  MONGODB_REPLICASET_NAME: Joi.string().required(),
+  MONGODB_CONNECTION_STRING: Joi.string().required(),
 
   MONGODB_VOLUME_PATH: Joi.string().required(),
 
