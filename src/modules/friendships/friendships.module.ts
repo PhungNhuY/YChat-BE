@@ -8,10 +8,7 @@ import {
   Conversation,
   ConversationSchema,
 } from '@modules/conversations/schemas/conversation.schema';
-import {
-  Message,
-  MessageSchema,
-} from '@modules/messages/schemas/message.schema';
+import { MessagesModule } from '@modules/messages/messages.module';
 
 @Module({
   imports: [
@@ -28,11 +25,8 @@ import {
         name: Conversation.name,
         schema: ConversationSchema,
       },
-      {
-        name: Message.name,
-        schema: MessageSchema,
-      },
     ]),
+    MessagesModule,
   ],
   providers: [FriendshipsService],
   controllers: [FriendshipsController],

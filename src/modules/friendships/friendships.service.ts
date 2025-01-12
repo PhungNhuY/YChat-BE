@@ -12,12 +12,9 @@ import {
   Conversation,
   EConversationType,
 } from '@modules/conversations/schemas/conversation.schema';
-import {
-  EMessageType,
-  Message,
-} from '@modules/messages/schemas/message.schema';
-import { SYSTEM_NOTIFICATION_MESSAGE } from '@constants/message.constant';
 import { EMemberRole } from '@modules/conversations/schemas/member.schema';
+import { MessagesService } from '@modules/messages/messages.service';
+import { ESystemNotificationMessage } from '@constants/message.constant';
 
 @Injectable()
 export class FriendshipsService {
@@ -28,10 +25,9 @@ export class FriendshipsService {
     private readonly userModel: Model<User>,
     @InjectModel(Conversation.name)
     private readonly conversationModel: Model<Conversation>,
-    @InjectModel(Message.name)
-    private readonly messageModel: Model<Message>,
     @InjectConnection()
     private readonly connection: Connection,
+    private readonly messageService: MessagesService,
   ) {}
 
   async getFriends(
@@ -212,18 +208,10 @@ export class FriendshipsService {
           }
 
           // send notification to conversation
-          await this.messageModel.create(
-            [
-              {
-                system: true,
-                conversation: conversation._id.toString(),
-                type: EMessageType.NOTIFICATION,
-                content: SYSTEM_NOTIFICATION_MESSAGE.BE_FRIEND,
-              },
-            ],
-            {
-              session,
-            },
+          await this.messageService.createNotificationMessage(
+            conversation._id.toString(),
+            ESystemNotificationMessage.BE_FRIEND,
+            session,
           );
         }
         // ------ END TRANSACTION

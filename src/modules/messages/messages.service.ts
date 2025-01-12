@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/mongoose';
-import { Message } from './schemas/message.schema';
+import { EMessageType, Message } from './schemas/message.schema';
 import { ClientSession, Connection, HydratedDocument, Model } from 'mongoose';
 import { CreateMessageDto } from './dtos/create-message.dto';
 import { AuthData, NewMessageData } from '@utils/types';
@@ -8,6 +8,7 @@ import { Conversation } from '@modules/conversations/schemas/conversation.schema
 import { MessageQueryDto } from './dtos/message-query.dto';
 import { LastMessage } from './schemas/last-message.schema';
 import { mongooseTransaction } from '@common/mongoose-transaction';
+import { ESystemNotificationMessage } from '@constants/message.constant';
 @Injectable()
 export class MessagesService {
   constructor(
@@ -66,6 +67,26 @@ export class MessagesService {
     );
 
     return { message: message.toObject(), conversation };
+  }
+
+  async createNotificationMessage(
+    conversationId: string,
+    content: ESystemNotificationMessage,
+    session?: ClientSession,
+  ) {
+    const [message] = await this.messageModel.create(
+      [
+        {
+          conversation: conversationId,
+          type: EMessageType.NOTIFICATION,
+          content,
+        },
+      ],
+      {
+        session,
+      },
+    );
+    await this.writeLastMessage(message, session);
   }
 
   async findAll(

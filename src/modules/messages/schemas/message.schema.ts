@@ -27,11 +27,6 @@ export class Message extends BaseSchemaSoftDelete {
   })
   user?: string;
 
-  @Prop({
-    type: Boolean,
-  })
-  system?: boolean;
-
   // to
   @Prop({
     required: true,

@@ -28,5 +28,6 @@ import { LastMessage, LastMessageSchema } from './schemas/last-message.schema';
   ],
   controllers: [MessagesController],
   providers: [MessagesService],
+  exports: [MessagesService],
 })
 export class MessagesModule {}
