@@ -42,11 +42,13 @@ export class MessagesService {
         // ------ START TRANSACTION
         // create message
         let [message] = await this.messageModel.create(
-          {
-            conversation: conversationId,
-            user: authData._id,
-            ...createMessageData,
-          },
+          [
+            {
+              conversation: conversationId,
+              user: authData._id,
+              ...createMessageData,
+            },
+          ],
           {
             session,
           },
