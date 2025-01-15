@@ -1,8 +1,10 @@
 import * as Joi from 'joi';
 
 const validationSchema = Joi.object({
-  PORT: Joi.number().required(),
   NODE_ENV: Joi.string().required().valid('development', 'production'),
+
+  PORT: Joi.number().required(),
+  DOMAIN: Joi.string().required(),
 
   MONGODB_DBNAME: Joi.string().required(),
   MONGODB_CONNECTION_STRING: Joi.string().required(),
