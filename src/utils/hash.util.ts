@@ -6,10 +6,10 @@ export async function hash(plain_text: string): Promise<string> {
   return hashed;
 }
 
-export async function compare(
-  plain_text: string,
-  hashed_text: string,
+export async function comparePlainValueWithHashedValue(
+  plain_value: string,
+  hashed_value: string,
 ): Promise<boolean> {
-  const isMatching = await bcryptjs.compare(plain_text, hashed_text);
+  const isMatching = await bcryptjs.compare(plain_value, hashed_value);
   return !!isMatching;
 }

@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
-import { FilterQuery, Model } from 'mongoose';
+import { ClientSession, FilterQuery, Model } from 'mongoose';
 import { RegisterDto } from '@modules/auth/dtos/register.dto';
 import { ApiQueryDto } from '@common/api-query.dto';
 import { AuthData } from '@utils/types';
@@ -28,13 +28,15 @@ export class UsersService {
 
   async create(
     createUserData: RegisterDto & {
-      verificationCode: string;
-      verificationCodeExpiresAt: number;
       validTokenIat: number;
     },
+    session?: ClientSession,
   ): Promise<User> {
     await this.validate(createUserData, null);
-    return await this.userModel.create(createUserData);
+    const [user] = await this.userModel.create([createUserData], {
+      ...(session && { session }),
+    });
+    return user;
   }
 
   async findLoginUser(email: string): Promise<User> {

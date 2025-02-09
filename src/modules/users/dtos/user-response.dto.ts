@@ -24,11 +24,5 @@ export class UserResponseDto extends BaseResponseDto {
   password: string;
 
   @Exclude()
-  verificationCode: string;
-
-  @Exclude()
-  verificationCodeExpiresAt: number;
-
-  @Exclude()
   validTokenIat: number;
 }

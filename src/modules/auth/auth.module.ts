@@ -8,6 +8,8 @@ import { JwtAccessTokenStrategy } from './strategies/jwt-access-token.strategy';
 import { JwtRefreshTokenStrategy } from './strategies/jwt-refresh-token.strategy';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchemaFactory } from '@modules/users/schemas/user.schema';
+import { Token, TokenSchema } from './schemas/token.schema';
+import { TokenService } from './token.service';
 
 @Module({
   imports: [
@@ -20,8 +22,19 @@ import { User, UserSchemaFactory } from '@modules/users/schemas/user.schema';
         useFactory: UserSchemaFactory,
       },
     ]),
+    MongooseModule.forFeature([
+      {
+        name: Token.name,
+        schema: TokenSchema,
+      },
+    ]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtAccessTokenStrategy, JwtRefreshTokenStrategy],
+  providers: [
+    AuthService,
+    TokenService,
+    JwtAccessTokenStrategy,
+    JwtRefreshTokenStrategy,
+  ],
 })
 export class AuthModule {}

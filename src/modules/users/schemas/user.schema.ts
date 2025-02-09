@@ -67,18 +67,6 @@ export class User extends BaseSchemaSoftDelete {
     type: Number,
   })
   validTokenIat: number;
-
-  @Prop({
-    type: String,
-    select: false,
-  })
-  verificationCode?: string;
-
-  @Prop({
-    type: Number,
-    select: false,
-  })
-  verificationCodeExpiresAt?: number;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
@@ -95,12 +83,6 @@ export const UserSchemaFactory = () => {
     if (this.isModified('password')) {
       const hashedPassword = await hash(this.password);
       this.password = hashedPassword;
-    }
-
-    // hash verificationCode
-    if (this.isModified('verificationCode') && !!this.verificationCode) {
-      const hashedVerificationCode = await hash(this.verificationCode);
-      this.verificationCode = hashedVerificationCode;
     }
     return next();
   });

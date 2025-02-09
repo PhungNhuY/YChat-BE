@@ -20,7 +20,7 @@ import { LoginDto } from './dtos/login.dto';
 import { LoginResponseDto } from './dtos/login-response.dto';
 import { Response } from 'express';
 import { ConfigService } from '@nestjs/config';
-import { ActivateQueryDto } from './dtos/activate-query.dto';
+import { ActivateAccountQueryDto } from './dtos/activate-query.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { JwtRefreshTokenGuard } from 'src/guards/jwt-refresh-token.guard';
 import { UseAuthData } from 'src/decorators/use-auth-data.decorator';
@@ -61,7 +61,7 @@ export class AuthController {
         maxAge:
           this.configService.get<number>('ACCESS_TOKEN_EXPIRATION_TIME') * 1000,
       }),
-      domain: this.configService.get<string>('DOMAIN'),
+      domain: this.configService.get<string>('API_HOST'),
       secure: this.configService.get<string>('NODE_EVN') === 'production',
     });
 
@@ -75,7 +75,7 @@ export class AuthController {
           this.configService.get<number>('REFRESH_TOKEN_EXPIRATION_TIME') *
           1000,
       }),
-      domain: this.configService.get<string>('DOMAIN'),
+      domain: this.configService.get<string>('API_HOST'),
       secure: this.configService.get<string>('NODE_EVN') === 'production',
     });
 
@@ -84,7 +84,7 @@ export class AuthController {
     );
   }
 
-  @Get('refresh')
+  @Post('refresh')
   @UseGuards(JwtRefreshTokenGuard)
   async refresh(
     @UseAuthData() authData: AuthData,
@@ -97,7 +97,7 @@ export class AuthController {
       path: '/',
       maxAge:
         this.configService.get<number>('ACCESS_TOKEN_EXPIRATION_TIME') * 1000,
-      domain: this.configService.get<string>('DOMAIN'),
+      domain: this.configService.get<string>('API_HOST'),
       secure: this.configService.get<string>('NODE_ENV') === 'production',
     });
 
@@ -106,9 +106,9 @@ export class AuthController {
     );
   }
 
-  @Get('activate')
-  async activate(@Query() query: ActivateQueryDto) {
-    await this.authService.activate(query.uid, query.code);
+  @Post('activate')
+  async activate(@Body() activateAccountQueryData: ActivateAccountQueryDto) {
+    await this.authService.activate(activateAccountQueryData);
 
     return buildSuccessResponse();
   }
@@ -121,7 +121,7 @@ export class AuthController {
       sameSite: 'strict',
       path: '/',
       maxAge: 0,
-      domain: this.configService.get<string>('DOMAIN'),
+      domain: this.configService.get<string>('API_HOST'),
       secure: this.configService.get<string>('NODE_EVN') === 'production',
     });
 
@@ -131,7 +131,7 @@ export class AuthController {
       sameSite: 'strict',
       path: '/api/auth/refresh',
       maxAge: 0,
-      domain: this.configService.get<string>('DOMAIN'),
+      domain: this.configService.get<string>('API_HOST'),
       secure: this.configService.get<string>('NODE_EVN') === 'production',
     });
 

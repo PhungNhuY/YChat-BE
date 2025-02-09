@@ -1,10 +1,13 @@
 import { IsMongoId, IsString } from 'class-validator';
 
-export class ActivateQueryDto {
+export class ActivateAccountQueryDto {
   @IsMongoId()
   @IsString()
   uid: string;
 
   @IsString()
-  code: string;
+  tid: string;
+
+  @IsString()
+  tv: string;
 }

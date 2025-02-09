@@ -1,14 +1,13 @@
 import {
   BadRequestException,
   Injectable,
-  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { RegisterDto } from './dtos/register.dto';
 import { UsersService } from '@modules/users/users.service';
 import { User } from '@modules/users/schemas/user.schema';
 import { LoginDto } from './dtos/login.dto';
-import { compare } from '@utils/hash.util';
+import { comparePlainValueWithHashedValue } from '@utils/hash.util';
 import { JwtService } from '@nestjs/jwt';
 import {
   access_token_private_key,
@@ -16,12 +15,15 @@ import {
 } from '@constants/jwt.const';
 import { ConfigService } from '@nestjs/config';
 import { EmailsService } from '@modules/emails/emails.service';
-import { generateRandomString } from '@utils/random-string.util';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { EUserStatus } from '@constants/user.constant';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
+import { ClientSession, Connection, Model } from 'mongoose';
 import { RefreshResponseDto } from './dtos/refresh-response.dto';
 import { AuthData } from '@utils/types';
+import { TokenService } from './token.service';
+import { mongooseTransaction } from '@common/mongoose-transaction';
+import { EUserStatus } from '@constants/user.constant';
+import { ActivateAccountQueryDto } from './dtos/activate-query.dto';
+import { ETokenType } from '@constants/token.constant';
 @Injectable()
 export class AuthService {
   constructor(
@@ -29,31 +31,61 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly emailsService: EmailsService,
+    private readonly tokenService: TokenService,
     @InjectModel(User.name) private readonly userModel: Model<User>,
+    @InjectConnection()
+    private readonly connection: Connection,
   ) {}
 
   async register(registerData: RegisterDto): Promise<User> {
-    const verificationCode = generateRandomString(64);
-    const verificationCodeExpiresAt =
-      Date.now() +
-      this.configService.get<number>('ACTIVATE_EMAIL_TOKEN_EXPIRATION_TIME') *
-        1000;
-    const newUser = await this.userService.create({
-      ...registerData,
-      verificationCode,
-      verificationCodeExpiresAt,
-      validTokenIat: Math.round(Date.now() / 1000),
-    });
+    let newUser: User;
+    let tokenId: string = '';
+    let tokenValue: string = '';
+    await mongooseTransaction(
+      this.connection,
+      async (session: ClientSession) => {
+        // ------ START TRANSACTION
+
+        // create user
+        newUser = await this.userService.create(
+          {
+            ...registerData,
+            validTokenIat: Math.round(Date.now() / 1000),
+          },
+          session,
+        );
+        // send confirmation email
+        const verificationTokenExpiresAt =
+          Date.now() +
+          this.configService.get<number>('ACTIVATE_TOKEN_EXPIRATION_TIME');
+        [tokenId, tokenValue] = await this.tokenService.createActivationToken(
+          newUser._id.toString(),
+          verificationTokenExpiresAt,
+          session,
+        );
+
+        // ------ END TRANSACTION
+      },
+    );
+
     await this.emailsService.sendRegistrationConfirmation(
       newUser,
-      verificationCode,
+      tokenId,
+      tokenValue,
     );
     return newUser;
   }
 
   async login(loginData: LoginDto) {
     const user = await this.userService.findLoginUser(loginData.email);
-    if (user && (await compare(loginData.password, user.password))) {
+    if (
+      user &&
+      user.status === EUserStatus.ACTIVE &&
+      (await comparePlainValueWithHashedValue(
+        loginData.password,
+        user.password,
+      ))
+    ) {
       // token payload
       const payload: AuthData = {
         _id: user._id.toString(),
@@ -83,38 +115,48 @@ export class AuthService {
     throw new UnauthorizedException(['Wrong credential']);
   }
 
-  async activate(userId: string, code: string) {
-    const user = await this.userModel
-      .findOne({
-        _id: userId,
-        deletedAt: null,
-        status: EUserStatus.INACTIVE,
-      })
-      .select('+verificationCode +verificationCodeExpiresAt')
-      .lean();
+  async activate(activateAccountQueryData: ActivateAccountQueryDto) {
+    // validate token
+    if (
+      await this.tokenService.isTokenValid(
+        activateAccountQueryData.uid,
+        activateAccountQueryData.tid,
+        ETokenType.ACTIVATION,
+        activateAccountQueryData.tv,
+      )
+    ) {
+      /* token is valid */
+      await mongooseTransaction(
+        this.connection,
+        async (session: ClientSession) => {
+          // ------ START TRANSACTION
 
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
+          // update user status
+          await this.userModel.updateOne(
+            {
+              _id: activateAccountQueryData.uid,
+              deleted_at: null,
+            },
+            {
+              status: EUserStatus.ACTIVE,
+            },
+            {
+              session,
+            },
+          );
+          // revoke token
+          await this.tokenService.revokeToken(
+            activateAccountQueryData.tid,
+            session,
+          );
 
-    if (await compare(code, user.verificationCode)) {
-      if (user.verificationCodeExpiresAt < Date.now()) {
-        throw new BadRequestException('Verification code has expired');
-      }
-
-      await this.userModel.updateOne(
-        { _id: user._id },
-        {
-          $set: {
-            status: EUserStatus.ACTIVE,
-            verificationCode: null,
-            verificationCodeExpiresAt: null,
-          },
+          // ------ END TRANSACTION
         },
       );
-      return true;
+    } else {
+      /* token is invalid */
+      throw new BadRequestException('Invalid verification code');
     }
-    throw new BadRequestException('Invalid verification code');
   }
 
   async refresh(authData: AuthData): Promise<RefreshResponseDto> {
