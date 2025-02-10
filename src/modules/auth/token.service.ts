@@ -56,19 +56,7 @@ export class TokenService {
     session?: ClientSession,
   ): Promise<[string, string]> {
     // delete all previous activation tokens
-    await this.tokenModel.updateMany(
-      {
-        user: userId,
-        type: ETokenType.ACTIVATION,
-        deleted_at: null,
-      },
-      {
-        deleted_at: new Date(),
-      },
-      {
-        ...(session && { session }),
-      },
-    );
+    await this.deleteAllTokensByType(userId, ETokenType.ACTIVATION, session);
 
     // create
     const token = randomBytes(32).toString('hex');
@@ -82,6 +70,52 @@ export class TokenService {
     );
 
     return [tokenDoc._id.toString(), token];
+  }
+
+  async createForgotPasswordToken(
+    userId: string,
+    expiresAt: number,
+    session?: ClientSession,
+  ): Promise<[string, string]> {
+    // delete all previous forgot-password tokens
+    await this.deleteAllTokensByType(
+      userId,
+      ETokenType.FORGOT_PASSWORD,
+      session,
+    );
+
+    // create
+    const token = randomBytes(32).toString('hex');
+    const hashedToken = await hash(token);
+    const tokenDoc = await this.create(
+      userId,
+      ETokenType.FORGOT_PASSWORD,
+      hashedToken,
+      expiresAt,
+      session,
+    );
+
+    return [tokenDoc._id.toString(), token];
+  }
+
+  async deleteAllTokensByType(
+    userId: string,
+    type: ETokenType,
+    session?: ClientSession,
+  ): Promise<void> {
+    await this.tokenModel.updateMany(
+      {
+        user: userId,
+        type,
+        deleted_at: null,
+      },
+      {
+        deleted_at: new Date(),
+      },
+      {
+        ...(session && { session }),
+      },
+    );
   }
 
   private async create(

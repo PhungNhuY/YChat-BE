@@ -1,12 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  Post,
-  Query,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, Get, Post, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dtos/register.dto';
 import {
@@ -26,6 +18,8 @@ import { JwtRefreshTokenGuard } from 'src/guards/jwt-refresh-token.guard';
 import { UseAuthData } from 'src/decorators/use-auth-data.decorator';
 import { RefreshResponseDto } from './dtos/refresh-response.dto';
 import { AuthData } from '@utils/types';
+import { FogotPasswordDto } from './dtos/forgot-password.dto';
+import { ResetPasswordDto } from './dtos/reset-password.dto';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -135,6 +129,20 @@ export class AuthController {
       secure: this.configService.get<string>('NODE_EVN') === 'production',
     });
 
+    return buildSuccessResponse();
+  }
+
+  @Post('forgot-password')
+  async createForgotPasswordRequest(
+    @Body() forgotPasswordData: FogotPasswordDto,
+  ) {
+    await this.authService.createForgotPasswordRequest(forgotPasswordData);
+    return buildSuccessResponse();
+  }
+
+  @Post('reset-password')
+  async resetPassword(@Body() resetPasswordData: ResetPasswordDto) {
+    await this.authService.resetPassword(resetPasswordData);
     return buildSuccessResponse();
   }
 }

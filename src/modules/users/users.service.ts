@@ -77,6 +77,20 @@ export class UsersService {
     return { items, total };
   }
 
+  async updatePassword(
+    userId: string,
+    password: string,
+    session?: ClientSession,
+  ) {
+    const user = await this.userModel.findOne({
+      _id: userId,
+      deletedAt: null,
+    });
+    if (!user) throw new NotFoundException('User not found');
+    user.password = password;
+    await user.save({ ...(session && { session }) });
+  }
+
   private async validate(data: Partial<RegisterDto>, userId: string | null) {
     const uniqueFields: FilterQuery<User>[] = [];
     data.email && uniqueFields.push({ email: data.email });

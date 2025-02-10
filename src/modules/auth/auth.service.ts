@@ -1,6 +1,7 @@
 import {
   BadRequestException,
   Injectable,
+  NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { RegisterDto } from './dtos/register.dto';
@@ -24,6 +25,8 @@ import { mongooseTransaction } from '@common/mongoose-transaction';
 import { EUserStatus } from '@constants/user.constant';
 import { ActivateAccountQueryDto } from './dtos/activate-query.dto';
 import { ETokenType } from '@constants/token.constant';
+import { FogotPasswordDto } from './dtos/forgot-password.dto';
+import { ResetPasswordDto } from './dtos/reset-password.dto';
 @Injectable()
 export class AuthService {
   constructor(
@@ -177,6 +180,67 @@ export class AuthService {
       access_token,
       access_token_expires_at,
     };
+  }
+
+  async createForgotPasswordRequest(forgotPasswordData: FogotPasswordDto) {
+    const user = await this.userModel
+      .findOne({
+        email: forgotPasswordData.email,
+        deleted_at: null,
+      })
+      .lean();
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // generate token
+    const [tokenId, tokenValue] =
+      await this.tokenService.createForgotPasswordToken(
+        user._id.toString(),
+        Date.now() + 12 * 60 * 60 * 1000,
+      );
+
+    // send email
+    await this.emailsService.sendResetPasswordRequest(
+      user,
+      tokenId,
+      tokenValue,
+    );
+  }
+
+  async resetPassword(resetPasswordData: ResetPasswordDto) {
+    // validate token
+    if (
+      !(await this.tokenService.isTokenValid(
+        resetPasswordData.uid,
+        resetPasswordData.tid,
+        ETokenType.FORGOT_PASSWORD,
+        resetPasswordData.tv,
+      ))
+    ) {
+      /* token is invalid */
+      throw new BadRequestException('Invalid verification code');
+    }
+
+    /* token is valid */
+    await mongooseTransaction(
+      this.connection,
+      async (session: ClientSession) => {
+        // ------ START TRANSACTION
+
+        // update user password
+        await this.userService.updatePassword(
+          resetPasswordData.uid,
+          resetPasswordData.password,
+          session,
+        );
+
+        // revoke token
+        await this.tokenService.revokeToken(resetPasswordData.tid, session);
+
+        // ------ END TRANSACTION
+      },
+    );
   }
 
   private generateToken(
