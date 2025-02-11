@@ -107,7 +107,7 @@ export class AuthController {
     return buildSuccessResponse();
   }
 
-  @Get('logout')
+  @Post('logout')
   async logout(@Res({ passthrough: true }) response: Response) {
     // remove access token
     response.cookie('access_token', null, {
