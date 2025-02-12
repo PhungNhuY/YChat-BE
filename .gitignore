@@ -41,5 +41,8 @@ lerna-debug.log*
 # mongo
 /mongo
 
+# redis
+/redis
+
 # secure
 /secure

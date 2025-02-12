@@ -2,6 +2,8 @@ import { Module } from '@nestjs/common';
 import { EmailsService } from './emails.service';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { BullModule } from '@nestjs/bullmq';
+import { SendEmailProcessor } from './send-email.processor';
 
 @Module({
   imports: [
@@ -22,8 +24,21 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         },
       }),
     }),
+
+    BullModule.registerQueue({
+      name: 'emails',
+      defaultJobOptions: {
+        removeOnComplete: true,
+        removeOnFail: true,
+        attempts: 3,
+        backoff: {
+          type: 'exponential',
+          delay: 5000, // ms
+        },
+      },
+    }),
   ],
-  providers: [EmailsService],
+  providers: [EmailsService, SendEmailProcessor],
   exports: [EmailsService],
 })
 export class EmailsModule {}

@@ -19,6 +19,17 @@ services:
       timeout: 10s
       retries: 3
 
+  cache:
+    image: redis:7.2-alpine
+    restart: unless-stopped
+    ports:
+      - $REDIS_PORT:6379
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - $REDIS_VOLUME_PATH:/data
+    networks:
+      - y-chat-network
+
 networks:
   y-chat-network:
     driver: bridge

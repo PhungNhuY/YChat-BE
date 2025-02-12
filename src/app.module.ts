@@ -13,6 +13,7 @@ import { WebsocketModule } from './modules/websocket/websocket.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { FriendshipsModule } from './modules/friendships/friendships.module';
 import { DevModule } from './modules/dev/dev.module';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { DevModule } from './modules/dev/dev.module';
       cache: true,
       expandVariables: true,
     }),
+
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -31,6 +33,19 @@ import { DevModule } from './modules/dev/dev.module';
       }),
       inject: [ConfigService],
     }),
+
+    BullModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        connection: {
+          host: configService.get<string>('REDIS_HOST'),
+          port: configService.get<number>('REDIS_PORT'),
+          password: configService.get<string>('REDIS_PASSWORD'),
+        },
+      }),
+      inject: [ConfigService],
+    }),
+
     EventEmitterModule.forRoot(),
     UsersModule,
     AuthModule,
