@@ -1,4 +1,12 @@
-import { Body, Controller, Get, Post, Res, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dtos/register.dto';
 import {
@@ -20,6 +28,8 @@ import { RefreshResponseDto } from './dtos/refresh-response.dto';
 import { AuthData } from '@utils/types';
 import { FogotPasswordDto } from './dtos/forgot-password.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
+import { GetUserFromTokenDto } from './dtos/token.dto';
+import { UserFromTokenResponseDto } from '@modules/users/dtos/user-from-token-response.dto';
 
 @Controller('auth')
 @ApiTags('auth')
@@ -138,6 +148,14 @@ export class AuthController {
   ) {
     await this.authService.createForgotPasswordRequest(forgotPasswordData);
     return buildSuccessResponse();
+  }
+
+  @Get('user-from-token')
+  async getUserFromToken(@Query() query: GetUserFromTokenDto) {
+    const user = await this.authService.getUserFromToken(query);
+    return buildSuccessResponse(
+      transformObjectToResponse(user, UserFromTokenResponseDto),
+    );
   }
 
   @Post('reset-password')

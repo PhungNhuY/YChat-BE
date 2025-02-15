@@ -1,15 +1,7 @@
 import { IsString, MinLength } from 'class-validator';
+import { TokenDto } from './token.dto';
 
-export class ResetPasswordDto {
-  @IsString()
-  uid: string;
-
-  @IsString()
-  tid: string;
-
-  @IsString()
-  tv: string;
-
+export class ResetPasswordDto extends TokenDto {
   @IsString()
   @MinLength(8)
   password: string;

@@ -33,6 +33,7 @@ export class TokenService {
       .findOne({
         deleted_at: null,
         _id: tokenId,
+        user: userId,
         type,
         expiresAt: {
           $gte: Date.now(),

@@ -27,6 +27,7 @@ import { ActivateAccountQueryDto } from './dtos/activate-query.dto';
 import { ETokenType } from '@constants/token.constant';
 import { FogotPasswordDto } from './dtos/forgot-password.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
+import { GetUserFromTokenDto } from './dtos/token.dto';
 @Injectable()
 export class AuthService {
   constructor(
@@ -206,6 +207,29 @@ export class AuthService {
       tokenId,
       tokenValue,
     );
+  }
+
+  async getUserFromToken(getUserFromTokenDto: GetUserFromTokenDto) {
+    const token = await this.tokenService.findValidToken(
+      getUserFromTokenDto.uid,
+      getUserFromTokenDto.tid,
+      getUserFromTokenDto.tokenType,
+      getUserFromTokenDto.tv,
+    );
+    if (!token) {
+      throw new BadRequestException('Invalid verification code');
+    }
+    const user = await this.userModel
+      .findOne({
+        _id: getUserFromTokenDto.uid,
+        deleted_at: null,
+      })
+      .select('email')
+      .lean();
+    if (!user) {
+      throw new BadRequestException('Invalid verification code');
+    }
+    return user;
   }
 
   async resetPassword(resetPasswordData: ResetPasswordDto) {
