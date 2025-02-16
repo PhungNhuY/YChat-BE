@@ -28,13 +28,17 @@ export class WSGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleConnection(socket: AuthenticatedSocket, ...args: any[]) {
     // add socket to room by userId
-    socket.join(socket.authData._id);
+    if (socket.authData?._id) {
+      socket.join(socket.authData._id);
+    }
     socket.emit('onConnected', true);
   }
 
   handleDisconnect(socket: AuthenticatedSocket) {
     // remove socket from room
-    socket.leave(socket.authData._id);
+    if (socket.authData?._id) {
+      socket.leave(socket.authData._id);
+    }
   }
 
   @SubscribeMessage('ping')
