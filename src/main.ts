@@ -7,6 +7,7 @@ import { configSwagger } from '@configs/api-docs.config';
 import helmet from 'helmet';
 import { WebSocketAdapter } from '@modules/websocket/websocket.adapter';
 import { ConfigService } from '@nestjs/config';
+import { AppService } from './app.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -47,6 +48,13 @@ async function bootstrap() {
   // ws adapter
   app.useWebSocketAdapter(new WebSocketAdapter(app, configService));
 
-  await app.listen(await configService.get<number>('PORT'));
+  // enable shutdown hook
+  app.enableShutdownHooks();
+
+  const server = await app.listen(await configService.get<number>('PORT'));
+
+  // set server to app service
+  const appService = app.get(AppService);
+  appService.setServer(server);
 }
 bootstrap();
