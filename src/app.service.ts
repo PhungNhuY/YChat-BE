@@ -13,21 +13,21 @@ export class AppService implements OnApplicationShutdown, OnModuleDestroy {
     this.server = server;
   }
 
+  // Graceful shutdown
   async onModuleDestroy() {
-    // Graceful shutdown
+    // force exit after few seconds
+    const forceExitTimeout = 10;
+    setTimeout(() => {
+      console.error(
+        `⏳ Server shutdown timeout exceeded (${forceExitTimeout}s), forcing exit.`,
+      );
+      process.exit(1);
+    }, forceExitTimeout * 1000);
 
-    console.log('🛑 Stopping HTTP requests...');
+    // Stops the server from accepting new connections
+    // and keeps existing connections
     if (this.server) {
-      // force exit after 10s
-      setTimeout(() => {
-        console.error(
-          '⏳ Server shutdown timeout exceeded (10s), forcing exit.',
-        );
-        process.exit(1);
-      }, 10 * 1000);
-
-      // Stops the server from accepting new connections
-      // and keeps existing connections
+      console.log('🛑 Stopping HTTP requests...');
       this.server.close(() => {
         console.log('✅ HTTP Server closed');
       });
