@@ -64,8 +64,10 @@ export class User extends BaseSchemaSoftDelete {
   @Prop({
     required: true,
     select: false,
-    type: Number,
+    type: Number, // unix time, seconds
+    default: 0,
   })
+  // iat = issued at
   validTokenIat: number;
 }
 

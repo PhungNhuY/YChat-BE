@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
@@ -11,11 +12,14 @@ import { ApiQueryDto } from '@common/api-query.dto';
 import { AuthData } from '@utils/types';
 import { EUserStatus } from '@constants/user.constant';
 import { MultiItemsResponse } from '@utils/api-response-builder.util';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   async findOne(userId: string): Promise<User> {
@@ -88,7 +92,10 @@ export class UsersService {
     });
     if (!user) throw new NotFoundException('User not found');
     user.password = password;
+    user.validTokenIat = Math.round(Date.now() / 1000);
     await user.save({ ...(session && { session }) });
+    // clear cache
+    await this.cacheManager.del(`iat:${user._id.toString()}`);
   }
 
   private async validate(data: Partial<RegisterDto>, userId: string | null) {
