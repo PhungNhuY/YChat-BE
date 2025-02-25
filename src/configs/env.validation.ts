@@ -17,10 +17,16 @@ const validationSchema = Joi.object({
   MONGODB_DBNAME: Joi.string().required(),
   MONGODB_CONNECTION_STRING: Joi.string().required(),
 
+  REDIS_HOST: Joi.string().required(),
+  REDIS_PORT: Joi.number().required(),
+  REDIS_PASSWORD: Joi.string().required(),
+
   SMTP_HOST: Joi.string().required(),
   SMTP_PORT: Joi.number().required(),
   SMTP_USER: Joi.string().email().required(),
   SMTP_PASS: Joi.string().required(),
+
+  MAX_FILE_SIZE: Joi.number().required(),
 });
 
 export default validationSchema;

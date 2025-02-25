@@ -16,6 +16,7 @@ import { DevModule } from './modules/dev/dev.module';
 import { BullModule } from '@nestjs/bullmq';
 import { CacheModule } from '@nestjs/cache-manager';
 import KeyvRedis, { Keyv } from '@keyv/redis';
+import { AssetsModule } from './modules/assets/assets.module';
 
 @Module({
   imports: [
@@ -86,6 +87,7 @@ import KeyvRedis, { Keyv } from '@keyv/redis';
     MessagesModule,
     WebsocketModule,
     FriendshipsModule,
+    AssetsModule,
     ...(process.env.NODE_ENV === 'development' ? [DevModule] : []),
   ],
   controllers: [AppController],

@@ -38,11 +38,8 @@ lerna-debug.log*
 .env
 .env.dev
 
-# mongo
+# data
 /mongo
-
-# redis
 /redis
-
-# secure
 /secure
+/assets
