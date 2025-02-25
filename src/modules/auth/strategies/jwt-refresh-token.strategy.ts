@@ -6,6 +6,7 @@ import { Request } from 'express';
 import { InjectModel } from '@nestjs/mongoose';
 import { User } from '@modules/users/schemas/user.schema';
 import { Model } from 'mongoose';
+import { EUserStatus } from '@constants/user.constant';
 
 @Injectable()
 export class JwtRefreshTokenStrategy extends PassportStrategy(
@@ -33,6 +34,7 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
         validTokenIat: {
           $lt: payload.iat,
         },
+        status: EUserStatus.ACTIVE,
       })
       .lean();
     if (!user) throw new UnauthorizedException('User not found');

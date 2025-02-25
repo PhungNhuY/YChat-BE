@@ -65,7 +65,7 @@ export class User extends BaseSchemaSoftDelete {
     required: true,
     select: false,
     type: Number, // unix time, seconds
-    default: 0,
+    default: new Date().getTime() / 1000,
   })
   // iat = issued at
   validTokenIat: number;

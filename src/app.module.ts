@@ -70,7 +70,7 @@ import KeyvRedis, { Keyv } from '@keyv/redis';
               }),
               {
                 namespace: 'ychat',
-                ttl: 5 * 60,
+                ttl: 5 * 60 * 1000,
               },
             ),
           ],

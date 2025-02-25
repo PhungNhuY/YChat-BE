@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  Inject,
   Injectable,
   NotFoundException,
   UnauthorizedException,
@@ -28,6 +29,8 @@ import { ETokenType } from '@constants/token.constant';
 import { FogotPasswordDto } from './dtos/forgot-password.dto';
 import { ResetPasswordDto } from './dtos/reset-password.dto';
 import { GetUserFromTokenDto } from './dtos/token.dto';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 @Injectable()
 export class AuthService {
   constructor(
@@ -39,6 +42,7 @@ export class AuthService {
     @InjectModel(User.name) private readonly userModel: Model<User>,
     @InjectConnection()
     private readonly connection: Connection,
+    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
   ) {}
 
   async register(registerData: RegisterDto): Promise<User> {
@@ -265,6 +269,32 @@ export class AuthService {
         // ------ END TRANSACTION
       },
     );
+  }
+
+  async isTokenValid(userId: string, iat: number) {
+    const iatCache = await this.cacheManager.get<number>(`iat:${userId}`);
+    // found cache
+    if (iatCache) {
+      return iatCache <= iat;
+    }
+    // miss cache
+    else {
+      // find user
+      const user = await this.userModel
+        .findOne({
+          _id: userId,
+          deletedAt: null,
+          status: EUserStatus.ACTIVE,
+        })
+        .select('validTokenIat')
+        .lean();
+      if (!user) throw new UnauthorizedException('User not found');
+
+      // set cache
+      await this.cacheManager.set(`iat:${userId}`, user.validTokenIat);
+
+      return user.validTokenIat <= iat;
+    }
   }
 
   private generateToken(
