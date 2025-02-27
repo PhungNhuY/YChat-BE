@@ -24,9 +24,7 @@ export class AssetsController {
   @Post('images')
   @UseInterceptors(
     FileInterceptor('file', {
-      //   limits: {
-      //     fileSize: +process.env.MAX_FILE_SIZE * 1024 * 1024,
-      //   },
+      // NOTE: fileSize limit here will not throw exception, so config this in ParseFilePipe
       fileFilter: (req: any, file: any, cb: any) => {
         if (file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
           // Allow storage of file
