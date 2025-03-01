@@ -5,7 +5,6 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
     createdAt: 'created_at',
     updatedAt: 'updated_at',
   },
-  versionKey: false,
   collection: 'lastMessages',
 })
 export class LastMessage {

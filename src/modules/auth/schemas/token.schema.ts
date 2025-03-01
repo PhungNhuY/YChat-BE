@@ -8,7 +8,6 @@ import { ETokenType } from '@constants/token.constant';
     createdAt: 'created_at',
     updatedAt: 'updated_at',
   },
-  versionKey: false,
   collection: 'tokens',
 })
 export class Token extends BaseSchemaSoftDelete {

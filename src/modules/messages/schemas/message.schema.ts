@@ -16,7 +16,6 @@ export enum EMessageType {
     createdAt: 'created_at',
     updatedAt: 'updated_at',
   },
-  versionKey: false,
   collection: 'messages',
 })
 export class Message extends BaseSchemaSoftDelete {

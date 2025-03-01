@@ -11,7 +11,6 @@ import { hash } from '@utils/hash.util';
     createdAt: 'created_at',
     updatedAt: 'updated_at',
   },
-  versionKey: false,
   collection: 'users',
 })
 export class User extends BaseSchemaSoftDelete {

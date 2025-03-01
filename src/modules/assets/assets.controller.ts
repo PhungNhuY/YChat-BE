@@ -5,6 +5,7 @@ import {
   ParseFilePipe,
   Post,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { AssetsService } from './assets.service';
@@ -14,10 +15,19 @@ import { randomUUID } from 'node:crypto';
 import { extname } from 'node:path';
 import { existsSync, mkdirSync } from 'node:fs';
 import * as dotenv from 'dotenv';
+import { UseAuthData } from 'src/decorators/use-auth-data.decorator';
+import { AuthData } from '@utils/types';
+import { JwtAccessTokenGuard } from 'src/guards/jwt-access-token.guard';
+import {
+  buildSuccessResponse,
+  transformObjectToResponse,
+} from '@utils/api-response-builder.util';
+import { AssetResponseDto } from './dtos/asset-response.dto';
 
 dotenv.config();
 
 @Controller('assets')
+@UseGuards(JwtAccessTokenGuard)
 export class AssetsController {
   constructor(private readonly assetsService: AssetsService) {}
 
@@ -41,9 +51,13 @@ export class AssetsController {
       },
       storage: diskStorage({
         destination: (req: any, file: any, cb: any) => {
-          const uploadPath = './assets/images';
+          const uploadPath = './assets/temp';
+          const imagesPath = './assets/images';
           if (!existsSync(uploadPath)) {
             mkdirSync(uploadPath, { recursive: true });
+          }
+          if (!existsSync(imagesPath)) {
+            mkdirSync(imagesPath, { recursive: true });
           }
           return cb(null, uploadPath);
         },
@@ -66,7 +80,11 @@ export class AssetsController {
       }),
     )
     file: Express.Multer.File,
+    @UseAuthData() authData: AuthData,
   ) {
-    console.log(file);
+    const image = await this.assetsService.uploadImage(file, authData);
+    return buildSuccessResponse(
+      transformObjectToResponse(image, AssetResponseDto),
+    );
   }
 }

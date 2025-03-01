@@ -13,7 +13,6 @@ export enum EFriendshipStatus {
     createdAt: 'created_at',
     updatedAt: 'updated_at',
   },
-  versionKey: false,
   collection: 'friendships',
 })
 export class Friendship extends BaseSchemaSoftDelete {
