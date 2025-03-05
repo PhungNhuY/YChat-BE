@@ -1,5 +1,5 @@
 import { IMAGE } from '@constants/asset.const';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, StreamableFile } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { AuthData } from '@utils/types';
 import { rm } from 'node:fs/promises';
@@ -7,6 +7,8 @@ import { parse } from 'node:path';
 import * as sharp from 'sharp';
 import { Asset } from './schemas/asset.schema';
 import { Model } from 'mongoose';
+import { checkFileExists, getFileSize } from '@utils/file.util';
+import { createReadStream } from 'node:fs';
 
 @Injectable()
 export class AssetsService {
@@ -20,6 +22,7 @@ export class AssetsService {
       const newFileName = parse(file.filename).name + '.webp';
       const newFilePath = file.destination + '/../images/' + newFileName;
       await this.convertImageToWebp(file.path, newFilePath);
+      const newFileSize = await getFileSize(newFilePath);
 
       // save data to db
       const image = await this.assetModel.create({
@@ -28,6 +31,7 @@ export class AssetsService {
         originalName: file.originalname,
         mimeType: IMAGE.WEBP_MIME_TYPE,
         path: newFilePath,
+        size: newFileSize,
       });
 
       return image.toObject();
@@ -39,7 +43,24 @@ export class AssetsService {
     }
   }
 
-  async convertImageToWebp(fromFile: string, toFile: string) {
+  async getAsset(assetId: string): Promise<[Asset, StreamableFile]> {
+    const metadata = await this.assetModel
+      .findOne({
+        deleted_at: null,
+        _id: assetId,
+      })
+      .lean();
+    if (!metadata) throw new NotFoundException('Asset not found');
+
+    // check file exists
+    const fileExists = await checkFileExists(metadata.path);
+    if (!fileExists) throw new NotFoundException('Asset not found');
+
+    const file = createReadStream(metadata.path);
+    return [metadata, new StreamableFile(file)];
+  }
+
+  private async convertImageToWebp(fromFile: string, toFile: string) {
     await sharp(fromFile)
       .resize({
         width: IMAGE.MAX_WIDTH,

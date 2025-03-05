@@ -37,9 +37,14 @@ export class Asset extends BaseSchemaSoftDelete {
   @Prop({
     type: String,
     required: true,
-    select: false,
   })
   path: string;
+
+  @Prop({
+    type: Number,
+    required: true,
+  })
+  size: number;
 }
 
 export const AssetSchema = SchemaFactory.createForClass(Asset);

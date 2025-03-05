@@ -1,9 +1,12 @@
 import {
   BadRequestException,
   Controller,
+  Get,
   MaxFileSizeValidator,
+  Param,
   ParseFilePipe,
   Post,
+  Res,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -23,6 +26,8 @@ import {
   transformObjectToResponse,
 } from '@utils/api-response-builder.util';
 import { AssetResponseDto } from './dtos/asset-response.dto';
+import { ObjectIdValidationPipe } from 'src/pipes/objectid-validation.pipe';
+import { Response } from 'express';
 
 dotenv.config();
 
@@ -86,5 +91,19 @@ export class AssetsController {
     return buildSuccessResponse(
       transformObjectToResponse(image, AssetResponseDto),
     );
+  }
+
+  @Get(':assetId')
+  async getAsset(
+    @Param('assetId', new ObjectIdValidationPipe()) assetId: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const [metadata, file] = await this.assetsService.getAsset(assetId);
+    res.set({
+      'Content-Disposition': `attachment; filename="${encodeURIComponent(metadata.fileName)}"`,
+      'Content-Type': metadata.mimeType,
+      'Content-Length': metadata.size,
+    });
+    return file;
   }
 }

@@ -13,6 +13,9 @@ export class AssetResponseDto {
   @Expose()
   mimeType: string;
 
+  @Expose()
+  size: number;
+
   @Exclude()
   path: string;
 }
