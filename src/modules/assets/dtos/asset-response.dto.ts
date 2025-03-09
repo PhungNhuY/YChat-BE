@@ -1,6 +1,7 @@
+import { BaseResponseDto } from '@common/base-response.dto';
 import { Exclude, Expose } from 'class-transformer';
 
-export class AssetResponseDto {
+export class AssetResponseDto extends BaseResponseDto {
   @Expose()
   uploader: string;
 

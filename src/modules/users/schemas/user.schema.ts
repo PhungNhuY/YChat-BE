@@ -40,7 +40,10 @@ export class User extends BaseSchemaSoftDelete {
   })
   customId?: string;
 
-  @Prop()
+  @Prop({
+    type: String,
+    ref: 'Asset',
+  })
   avatar?: string;
 
   @Prop()

@@ -6,7 +6,7 @@ import { rm } from 'node:fs/promises';
 import { parse } from 'node:path';
 import * as sharp from 'sharp';
 import { Asset } from './schemas/asset.schema';
-import { Model } from 'mongoose';
+import { ClientSession, Model } from 'mongoose';
 import { checkFileExists, getFileSize } from '@utils/file.util';
 import { createReadStream } from 'node:fs';
 
@@ -16,7 +16,11 @@ export class AssetsService {
     @InjectModel(Asset.name) private readonly assetModel: Model<Asset>,
   ) {}
 
-  async uploadImage(file: Express.Multer.File, authData: AuthData) {
+  async uploadImage(
+    file: Express.Multer.File,
+    authData: AuthData,
+    session?: ClientSession,
+  ): Promise<Asset> {
     try {
       // convert image to webp and move from temp to images folder
       const newFileName = parse(file.filename).name + '.webp';
@@ -25,14 +29,21 @@ export class AssetsService {
       const newFileSize = await getFileSize(newFilePath);
 
       // save data to db
-      const image = await this.assetModel.create({
-        uploader: authData._id,
-        fileName: newFileName,
-        originalName: file.originalname,
-        mimeType: IMAGE.WEBP_MIME_TYPE,
-        path: newFilePath,
-        size: newFileSize,
-      });
+      const [image] = await this.assetModel.create(
+        [
+          {
+            uploader: authData._id,
+            fileName: newFileName,
+            originalName: file.originalname,
+            mimeType: IMAGE.WEBP_MIME_TYPE,
+            path: newFilePath,
+            size: newFileSize,
+          },
+        ],
+        {
+          session,
+        },
+      );
 
       return image.toObject();
     } catch (error) {

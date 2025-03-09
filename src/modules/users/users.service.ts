@@ -4,9 +4,9 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
+import { InjectConnection, InjectModel } from '@nestjs/mongoose';
 import { User } from './schemas/user.schema';
-import { ClientSession, FilterQuery, Model } from 'mongoose';
+import { ClientSession, Connection, FilterQuery, Model } from 'mongoose';
 import { RegisterDto } from '@modules/auth/dtos/register.dto';
 import { ApiQueryDto } from '@common/api-query.dto';
 import { AuthData } from '@utils/types';
@@ -14,12 +14,17 @@ import { EUserStatus } from '@constants/user.constant';
 import { MultiItemsResponse } from '@utils/api-response-builder.util';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
+import { AssetsService } from '@modules/assets/assets.service';
+import { mongooseTransaction } from '@common/mongoose-transaction';
+import { Asset } from '@modules/assets/schemas/asset.schema';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
+    @InjectConnection() private readonly connection: Connection,
+    private readonly assetsService: AssetsService,
   ) {}
 
   async findOne(userId: string): Promise<User> {
@@ -96,6 +101,29 @@ export class UsersService {
     await user.save({ ...(session && { session }) });
     // clear cache
     await this.cacheManager.del(`iat:${user._id.toString()}`);
+  }
+
+  async updateAvatar(
+    authData: AuthData,
+    image: Express.Multer.File,
+  ): Promise<Asset> {
+    const user = await this.userModel.findOne({
+      _id: authData._id,
+      deletedAt: null,
+    });
+    if (!user) throw new NotFoundException('User not found');
+
+    let asset: Asset;
+    await mongooseTransaction(this.connection, async (session) => {
+      // save image
+      asset = await this.assetsService.uploadImage(image, authData, session);
+
+      // update user
+      user.avatar = asset._id.toString();
+      await user.save({ session });
+    });
+
+    return asset;
   }
 
   private async validate(data: Partial<RegisterDto>, userId: string | null) {

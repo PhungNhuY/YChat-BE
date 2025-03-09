@@ -1,5 +1,6 @@
 import { BaseResponseDto } from '@common/base-response.dto';
-import { Exclude, Expose } from 'class-transformer';
+import { AssetResponseDto } from '@modules/assets/dtos/asset-response.dto';
+import { Exclude, Expose, Type } from 'class-transformer';
 
 export class UserResponseDto extends BaseResponseDto {
   @Expose()
@@ -12,7 +13,8 @@ export class UserResponseDto extends BaseResponseDto {
   gender: number;
 
   @Expose()
-  avatar: string;
+  @Type(() => AssetResponseDto)
+  avatar: string | AssetResponseDto;
 
   @Expose()
   status: number;

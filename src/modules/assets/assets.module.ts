@@ -10,5 +10,6 @@ import { Asset, AssetSchema } from './schemas/asset.schema';
   ],
   providers: [AssetsService],
   controllers: [AssetsController],
+  exports: [AssetsService],
 })
 export class AssetsModule {}
