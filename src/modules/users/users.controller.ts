@@ -60,7 +60,7 @@ export class UsersController {
     FileInterceptor('file', {
       // NOTE: fileSize limit here will not throw exception, so config this in ParseFilePipe
       fileFilter: (req: any, file: any, cb: any) => {
-        if (file.mimetype.match(/\/(jpg|jpeg|png|gif)$/)) {
+        if (file.mimetype.match(/\/(jpg|jpeg|png|gif|webp)$/)) {
           // Allow storage of file
           cb(null, true);
         } else {
