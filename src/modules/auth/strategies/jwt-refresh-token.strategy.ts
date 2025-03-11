@@ -29,7 +29,7 @@ export class JwtRefreshTokenStrategy extends PassportStrategy(
     const user = await this.userModel
       .findOne({
         _id: payload._id,
-        deletedAt: null,
+        deleted_at: null,
         // The valid token is the one created after validTokenIat
         validTokenIat: {
           $lt: payload.iat,

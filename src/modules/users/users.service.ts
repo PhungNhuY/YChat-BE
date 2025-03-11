@@ -17,11 +17,15 @@ import { Cache } from 'cache-manager';
 import { AssetsService } from '@modules/assets/assets.service';
 import { mongooseTransaction } from '@common/mongoose-transaction';
 import { Asset } from '@modules/assets/schemas/asset.schema';
+import { Friendship } from '@modules/friendships/schemas/friendship.schema';
+import { UserWithFriendshipResponseDto } from './dtos/user-response.dto';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
+    @InjectModel(Friendship.name)
+    private readonly friendshipModel: Model<Friendship>,
     @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
     @InjectConnection() private readonly connection: Connection,
     private readonly assetsService: AssetsService,
@@ -29,7 +33,7 @@ export class UsersService {
 
   async findOne(userId: string): Promise<User> {
     const user = await this.userModel
-      .findOne({ _id: userId, deletedAt: null })
+      .findOne({ _id: userId, deleted_at: null })
       .lean();
     if (!user) throw new NotFoundException('User not found');
     return user;
@@ -50,7 +54,7 @@ export class UsersService {
 
   async findLoginUser(email: string): Promise<User> {
     const user = await this.userModel
-      .findOne({ email, deletedAt: null })
+      .findOne({ email, deleted_at: null })
       .select('+password')
       .lean();
     return user;
@@ -59,11 +63,12 @@ export class UsersService {
   async find(
     query: ApiQueryDto,
     authData: AuthData,
-  ): Promise<MultiItemsResponse<User>> {
+  ): Promise<MultiItemsResponse<UserWithFriendshipResponseDto>> {
     // build filter query
     const filter: FilterQuery<User> = {
-      deletedAt: null,
+      deleted_at: null,
       status: EUserStatus.ACTIVE,
+      _id: { $ne: authData._id },
     };
     query?.q &&
       Object.assign(filter, {
@@ -74,8 +79,6 @@ export class UsersService {
     const itemsQuery = this.userModel.find(filter);
     query?.page && itemsQuery.skip((query.page - 1) * query.limit);
     query?.limit && itemsQuery.limit(query.limit);
-    // query?.sortBy && itemsQuery.sort(query.sortBy);
-    // query?.fields && itemsQuery.select(query.fields);
     itemsQuery.lean();
 
     // build get total of users query
@@ -83,7 +86,37 @@ export class UsersService {
 
     const [items, total] = await Promise.all([itemsQuery, totalQuery]);
 
-    return { items, total };
+    // check friendship status
+    let usersWithFriendshipStatus = [];
+    if (items.length > 0) {
+      const userIds = items.map((item) => item._id.toString());
+      const friendships = await this.friendshipModel
+        .find({
+          $or: [
+            { sender: authData._id, receiver: { $in: userIds } },
+            { sender: { $in: userIds }, receiver: authData._id },
+          ],
+          deleted_at: null,
+        })
+        .lean();
+
+      // build friendship map
+      const friendshipMap = new Map<string, Friendship>(
+        friendships.map((f) => [f._id.toString(), f]),
+      );
+
+      // add friendship status
+      usersWithFriendshipStatus = items.map((item) => {
+        const friendship = friendshipMap.get(item._id.toString());
+        if (friendship) {
+          (item as unknown as UserWithFriendshipResponseDto).friendshipStatus =
+            friendship.status;
+        }
+        return item;
+      });
+    }
+
+    return { items: usersWithFriendshipStatus, total };
   }
 
   async updatePassword(
@@ -93,7 +126,7 @@ export class UsersService {
   ) {
     const user = await this.userModel.findOne({
       _id: userId,
-      deletedAt: null,
+      deleted_at: null,
     });
     if (!user) throw new NotFoundException('User not found');
     user.password = password;
@@ -109,7 +142,7 @@ export class UsersService {
   ): Promise<Asset> {
     const user = await this.userModel.findOne({
       _id: authData._id,
-      deletedAt: null,
+      deleted_at: null,
     });
     if (!user) throw new NotFoundException('User not found');
 
@@ -131,7 +164,7 @@ export class UsersService {
     data.email && uniqueFields.push({ email: data.email });
 
     const matchObject: FilterQuery<User> = {
-      deletedAt: null,
+      deleted_at: null,
       _id: { $ne: userId },
       $or: [...uniqueFields],
     };

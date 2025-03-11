@@ -283,7 +283,7 @@ export class AuthService {
       const user = await this.userModel
         .findOne({
           _id: userId,
-          deletedAt: null,
+          deleted_at: null,
           status: EUserStatus.ACTIVE,
         })
         .select('validTokenIat')
