@@ -17,7 +17,10 @@ import {
   transformArrayToResponse,
   transformObjectToResponse,
 } from '@utils/api-response-builder.util';
-import { UserResponseDto } from './dtos/user-response.dto';
+import {
+  UserResponseDto,
+  UserWithFriendshipResponseDto,
+} from './dtos/user-response.dto';
 import { JwtAccessTokenGuard } from 'src/guards/jwt-access-token.guard';
 import { AuthData } from '@utils/types';
 import { ApiQueryDto } from '@common/api-query.dto';
@@ -51,7 +54,7 @@ export class UsersController {
   ) {
     const data = await this.usersService.find(apiQueryDto, authData);
     return buildSuccessResponse(
-      transformArrayToResponse(data, UserResponseDto),
+      transformArrayToResponse(data, UserWithFriendshipResponseDto),
     );
   }
 
