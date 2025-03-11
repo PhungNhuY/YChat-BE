@@ -142,6 +142,7 @@ export class FriendshipsService {
         { sender: authData._id, receiver: createRequestData.receiver },
         { sender: createRequestData.receiver, receiver: authData._id },
       ],
+      status: { $ne: EFriendshipStatus.DECLINED },
     });
     if (validFriendship)
       throw new BadRequestException('Request has been duplicated');

@@ -1,6 +1,6 @@
 import { BaseResponseDto } from '@common/base-response.dto';
 import { AssetResponseDto } from '@modules/assets/dtos/asset-response.dto';
-import { EFriendshipStatus } from '@modules/friendships/schemas/friendship.schema';
+import { FriendshipResponseDto } from '@modules/friendships/dtos/friendship-response.dto';
 import { Exclude, Expose, Type } from 'class-transformer';
 
 export class UserResponseDto extends BaseResponseDto {
@@ -32,5 +32,6 @@ export class UserResponseDto extends BaseResponseDto {
 
 export class UserWithFriendshipResponseDto extends UserResponseDto {
   @Expose()
-  friendshipStatus: EFriendshipStatus;
+  @Type(() => FriendshipResponseDto)
+  friendship?: FriendshipResponseDto;
 }

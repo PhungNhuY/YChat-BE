@@ -101,21 +101,24 @@ export class UsersService {
         .lean();
 
       // build friendship map
-      const friendshipMap = new Map<string, Friendship>(
-        friendships.map((f) => [f._id.toString(), f]),
-      );
+      const friendshipMap = new Map<string, Friendship>();
+      friendships.forEach((friendship) => {
+        if (friendship.sender.toString() === authData._id.toString()) {
+          friendshipMap.set(friendship.receiver.toString(), friendship);
+        } else {
+          friendshipMap.set(friendship.sender.toString(), friendship);
+        }
+      });
 
       // add friendship status
       usersWithFriendshipStatus = items.map((item) => {
         const friendship = friendshipMap.get(item._id.toString());
         if (friendship) {
-          (item as unknown as UserWithFriendshipResponseDto).friendshipStatus =
-            friendship.status;
+          (item as unknown as any).friendship = friendship;
         }
         return item;
       });
     }
-
     return { items: usersWithFriendshipStatus, total };
   }
 
